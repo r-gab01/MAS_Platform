@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 # Importa tutti i pezzi
-from app.shared.schemas.agent_schemas import AgentCreate, AgentRead
+from app.shared.schemas.agent_schemas import AgentCreate, AgentRead, AgentBase, AgentReadFull
 from app.control_plane.services import agent_service
 from app.shared.persistence.db_client import get_db
 
@@ -45,7 +45,7 @@ def read_all_agents(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/{agent_id}", response_model=AgentRead)
+@router.get("/{agent_id}", response_model=AgentReadFull)
 def read_agent(agent_id: int,
                db: Session = Depends(get_db)
                ):
@@ -58,7 +58,7 @@ def read_agent(agent_id: int,
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.put("/{agent_id}", response_model=AgentRead)
+@router.put("/{agent_id}", response_model=AgentReadFull)
 def update_agent(agent_data: AgentCreate,
                  agent_id: int,
                  db: Session = Depends(get_db)

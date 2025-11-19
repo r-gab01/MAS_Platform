@@ -34,6 +34,13 @@ class TeamCreate(TeamBase):
 
 class TeamRead(TeamBase):
     id: int
+
+    class Config:
+        from_attributes: True
+
+
+class TeamReadFull(TeamBase):
+    id: int
     supervisor: AgentRead
     workers: List[AgentRead]
 

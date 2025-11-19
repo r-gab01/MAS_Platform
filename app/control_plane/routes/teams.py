@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.shared.schemas.team_schemas import TeamCreate, TeamRead
+from app.shared.schemas.team_schemas import TeamCreate, TeamRead, TeamBase, TeamReadFull
 from app.shared.persistence.db_client import get_db
 from app.control_plane.services import team_service
 
@@ -39,7 +39,7 @@ def read_all_teams(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/{team_id}", response_model=TeamRead)
+@router.get("/{team_id}", response_model=TeamReadFull)
 def read_team(team_id: int,
                db: Session = Depends(get_db)
                ):

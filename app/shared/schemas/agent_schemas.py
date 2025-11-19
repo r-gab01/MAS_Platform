@@ -27,11 +27,17 @@ class AgentCreate(AgentBase):
     pass  # Per ora, è uguale alla base
 
 # Schema per la LETTURA (ciò che restituiamo, include l'ID del DB)
-class AgentRead(AgentBase):
+class AgentReadFull(AgentBase):
     id: int
     prompt: PromptRead  # Include i dettagli del prompt
-    llm_model: LLMModelRead # Include i dettagli del LLM utilizzato
+    #llm_model: LLMModelRead # Include i dettagli del LLM utilizzato
 
     class Config:
         from_attributes = True  # Questo dice a Pydantic di leggere i dati da un modello SQLAlchemy
                                 # quindi pydantic per il campo id di AgentRead, legge created_agent.id etc. e crea AgentRead
+
+class AgentRead(AgentBase):
+    id:int
+
+    class Config:
+        from_attributes = True
