@@ -1,0 +1,67 @@
+from typing import Optional, List
+from sqlalchemy import Integer, String, Float, ForeignKey, Enum as SQLEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.shared.persistence.models import Base
+import enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.shared.persistence.models import PromptModel, TeamModel, LLMModel
+
+class AgentType(str, enum.Enum):
+    SUPERVISOR = "supervisor"
+    WORKER = "worker"
+
+
+class AgentModel(Base):
+    __tablename__ = "agents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+    temperature: Mapped[float] = mapped_column(Float, default=0.0)
+    agent_type: Mapped[AgentType] = mapped_column(
+        SQLEnum(AgentType, native_enum=False),
+        default=AgentType.WORKER
+    )
+
+    # Foreign Key verso Prompt
+    prompt_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("prompts.id", ondelete="RESTRICT"),
+        nullable=False
+    )
+
+    # Relationship: un agente ha un prompt.
+    prompt: Mapped["PromptModel"] = relationship( #Serve a mappare e navigare le relazioni tra i modelli (tabelle) a livello di Python.
+        "PromptModel",                  # Non aggiunge colonne al DB (quello lo fa la ForeignKey),
+        back_populates="agents"        # permettono di accedere agli oggetti correlati in modo diretto (es. prompt.agents), senza scrivere query SQL esplicite.
+                                        # back_populates permette di sincronizzare il campo automaticamente (es. alla creazione di un nuovo agente con questo prompt)
+    )
+
+    # Foreign Key verso llm_Model
+    model_deployment_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("llm_models.id", ondelete="RESTRICT"),
+        nullable=False
+    )
+
+    # Relationship: un agente usa un Modello llm
+    model_deployment: Mapped["LLMModel"] = relationship(
+        "LLMModel",
+        back_populates="agents"
+    )
+
+    # Relationship per i team dove questo agent è SUPERVISOR (one to many)
+    managed_teams: Mapped[List["TeamModel"]] = relationship(
+        "TeamModel",
+        foreign_keys="[TeamModel.supervisor_id]",
+        back_populates="supervisor"
+    )
+
+    # Relationship per i team dove questo agent è WORKER (one to many)
+    worker_teams: Mapped[List["TeamModel"]] = relationship(
+        "TeamModel",
+        secondary="team_workers",
+        back_populates="workers"
+    )
