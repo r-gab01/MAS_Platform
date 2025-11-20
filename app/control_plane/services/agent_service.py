@@ -21,9 +21,9 @@ def create_agent(db: Session, agent_data: AgentCreate) -> AgentModel:
         raise ValueError(f"Prompt con ID {agent_data.prompt_id} non trovato")
 
     # Controllo llm_model valido
-    llm_model = db.query(LLMModel).filter(LLMModel.id == agent_data.model_deployment_id).first()
+    llm_model = db.query(LLMModel).filter(LLMModel.id == agent_data.llm_model_id).first()
     if not llm_model:
-        raise ValueError(f"Modello LLM con id={agent_data.model_deployment_id} non trovato")
+        raise ValueError(f"Modello LLM con id={agent_data.llm_model_id} non trovato")
 
     # 2. Chiama l'archivista per salvare
     print(f"Servizio: Creo l'agente '{agent_data.name}'...")

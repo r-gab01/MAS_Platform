@@ -2,7 +2,7 @@
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import AzureChatOpenAI
-from langchain_aws import ChatBedrock
+from langchain_aws import ChatBedrock, ChatBedrockConverse
 from app.shared.security.credential_manager import credential_manager
 
 
@@ -41,13 +41,14 @@ def get_llm_model(
     elif provider.lower() == "aws":
         creds = credential_manager.get_aws_credentials()
 
-        return ChatBedrock(
+        return ChatBedrockConverse(
             model_id=model_name,  # es. "anthropic.claude-3-sonnet-20240229-v1:0"
             client=None,  # LangChain creerà il client boto3 automaticamente
             region_name=creds["region_name"],
             aws_access_key_id=creds["aws_access_key_id"],
             aws_secret_access_key=creds["aws_secret_access_key"],
-            model_kwargs={"temperature": temperature}  # Bedrock passa i param così
+            #model_kwargs={"temperature": temperature}  # Bedrock passa i param così
+            temperature=temperature
         )
 
     else:

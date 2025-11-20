@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.control_plane.routes import agents, prompts, teams, llm_models
 from app.shared.persistence.db_client import create_db_and_tables, SessionLocal
-from app.shared.persistence.seed import seed_llm_models, seed_prompts
+from app.shared.persistence.seed import seed_llm_models, seed_prompts, seed_agents
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,6 +22,7 @@ async def lifespan(app: FastAPI):
     try:
         seed_llm_models(db)
         seed_prompts(db)
+        seed_agents(db)
     finally:
         db.close()
     print("✅ Database pronto.")

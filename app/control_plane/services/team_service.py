@@ -2,7 +2,7 @@ from app.shared.persistence.models import TeamModel
 from app.shared.schemas.team_schemas import TeamCreate
 from app.shared.persistence import team_db, agent_db
 from sqlalchemy.orm import Session
-from app.shared.persistence.models.agent_model import AgentType
+from app.shared.schemas.agent_schemas import AgentType
 
 
 def create_team(db: Session, team_data: TeamCreate) -> TeamModel:

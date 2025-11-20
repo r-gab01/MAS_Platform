@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from app.shared.persistence.models import LLMModel, PromptModel
+from app.shared.persistence.models import LLMModel, PromptModel, AgentModel
+from app.shared.schemas.agent_schemas import AgentType
 
 
 def seed_llm_models(db: Session):
@@ -14,22 +15,22 @@ def seed_llm_models(db: Session):
     initial_models = [
         LLMModel(
             name="Sonnet 4.5",
-            api_model_name="anthropic.claude-sonnet-4-5-20250929-v1:0",
+            api_model_name="eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
             provider="aws",
         ),
         LLMModel(
             name="Nova Micro",
-            api_model_name="amazon.nova-micro-v1:0",
+            api_model_name="eu.amazon.nova-micro-v1:0",
             provider="aws",
         ),
         LLMModel(
             name="Nova Pro",
-            api_model_name="amazon.nova-pro-v1:0",
+            api_model_name="eu.amazon.nova-pro-v1:0",
             provider="aws",
         ),
         LLMModel(
             name="Llama 3.2-1B",
-            api_model_name="meta.llama3-2-1b-instruct-v1:0",
+            api_model_name="eu.meta.llama3-2-1b-instruct-v1:0",
             provider="aws",
         )
     ]
@@ -71,6 +72,43 @@ def seed_prompts(db: Session):
                           "Procedi in questo modo: scrivi prima tutti i capitoli e poi generali ad uno uno. "
                           "Una volta ottenuti tutti i capitoli completi, il tuo compito finale è presentare l'intero ebook in formato markdown senza sintetizzare nulla. "
                           "Scrivi solo il contenuto dell'ebook"
+        )
+    ]
+    db.add_all(initial_models)
+    db.commit()
+
+def seed_agents(db: Session):
+    """
+    Popola il DB con agenti starter
+    """
+
+    if db.query(AgentModel).first():
+        return
+
+    initial_models = [
+        AgentModel(
+            name="chapter_writer_agent",
+            description="Agente in grado di scrivere un intero capitolo a partire da un titolo",
+            temperature=0,
+            agent_type=AgentType.WORKER,
+            prompt_id=1,
+            llm_model_id=2
+        ),
+        AgentModel(
+            name="index_generator_agent",
+            description="Agente in grado di redirre un indice di un ebook su un argomento",
+            temperature=0,
+            agent_type=AgentType.WORKER,
+            prompt_id=2,
+            llm_model_id=2
+        ),
+        AgentModel(
+            name="ebook_supervisor",
+            description="Supervisore nella scrittura di un ebook",
+            temperature=0,
+            agent_type=AgentType.WORKER,
+            prompt_id=3,
+            llm_model_id=2
         )
     ]
     db.add_all(initial_models)

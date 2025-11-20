@@ -16,8 +16,8 @@ def _create_worker_tool(worker: AgentModel):
     """
     # 1. Crea il modello e l'agente worker
     model = get_llm_model(
-        provider=worker.model_deployment.provider,
-        model_name=worker.model_deployment.api_model_name,
+        provider=worker.llm_model.provider,
+        model_name=worker.llm_model.api_model_name,
         temperature=worker.temperature,
         max_tokens=None
     )
@@ -61,8 +61,8 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
 
     # 3. Crea il Supervisor
     supervisor_model = get_llm_model(
-        provider=team.supervisor.model_deployment.provider,
-        model_name=team.supervisor.model_deployment.api_model_name,
+        provider=team.supervisor.llm_model.provider,
+        model_name=team.supervisor.llm_model.api_model_name,
         temperature=team.supervisor.temperature,
         max_tokens=None
     )

@@ -5,12 +5,10 @@ from app.shared.persistence.models import Base
 import enum
 from typing import TYPE_CHECKING
 
+from app.shared.schemas.agent_schemas import AgentType
+
 if TYPE_CHECKING:
     from app.shared.persistence.models import PromptModel, TeamModel, LLMModel
-
-class AgentType(str, enum.Enum):
-    SUPERVISOR = "supervisor"
-    WORKER = "worker"
 
 
 class AgentModel(Base):
@@ -40,14 +38,14 @@ class AgentModel(Base):
     )
 
     # Foreign Key verso llm_Model
-    model_deployment_id: Mapped[int] = mapped_column(
+    llm_model_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("llm_models.id", ondelete="RESTRICT"),
         nullable=False
     )
 
     # Relationship: un agente usa un Modello llm
-    model_deployment: Mapped["LLMModel"] = relationship(
+    llm_model: Mapped["LLMModel"] = relationship(
         "LLMModel",
         back_populates="agents"
     )
