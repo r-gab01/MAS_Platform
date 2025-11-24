@@ -53,7 +53,7 @@ def seed_prompts(db: Session):
         PromptModel(
             name="chapter_writer_prompt",
             description="Prompt per generare un capitolo ebook relativo ad un argomento",
-            system_prompt="Sei un assistente esperto nella generazione di contenuti per ebook su Praga. "
+            system_prompt="Sei un assistente esperto nella generazione di contenuti per ebook. "
                           "Il tuo unico compito è prendere un titolo di un capitolo fornito dall'utente e generare il capitolo relativo all'argomento, per un ebook. "
                           "Il capitolo generato deve essere esaustivo sull'argomento. Rispondi SOLO con il paragrafo generato."
         ),
@@ -69,7 +69,7 @@ def seed_prompts(db: Session):
             description="Prompt per gestire la creazione di un ebook",
             system_prompt="Sei un agente supervisore per la scrittura di ebook. "
                           "Il tuo compito è coordinare il processo di scrittura. "
-                          "Procedi in questo modo: scrivi prima tutti i capitoli e poi generali ad uno uno. "
+                          "Procedi in questo modo: scrivi prima tutti i capitoli e poi generali ad uno uno tramite tools. Ricordati di fornire il contesto della richiesta dell'utente al tool. "
                           "Una volta ottenuti tutti i capitoli completi, il tuo compito finale è presentare l'intero ebook in formato markdown senza sintetizzare nulla. "
                           "Scrivi solo il contenuto dell'ebook"
         )
