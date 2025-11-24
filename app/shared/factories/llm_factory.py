@@ -37,8 +37,8 @@ def get_llm_model(
             max_tokens=max_tokens
         )
 
-    # --- CASO 2: AWS BEDROCK (Claude, Llama, Titan) ---
-    elif provider.lower() == "aws":
+    # --- CASO 2: AWS BEDROCK CONVERSE (AMAZON MODELS)
+    elif provider.lower() == "aws-converse":
         creds = credential_manager.get_aws_credentials()
 
         return ChatBedrockConverse(
@@ -48,6 +48,20 @@ def get_llm_model(
             aws_access_key_id=creds["aws_access_key_id"],
             aws_secret_access_key=creds["aws_secret_access_key"],
             #model_kwargs={"temperature": temperature}  # Bedrock passa i param così
+            temperature=temperature
+        )
+
+    # --- CASO 2: AWS BEDROCK (Claude, Llama, Titan) ---
+    elif provider.lower() == "aws":
+        creds = credential_manager.get_aws_credentials()
+
+        return ChatBedrock(
+            model_id=model_name,  # es. "anthropic.claude-3-sonnet-20240229-v1:0"
+            client=None,  # LangChain creerà il client boto3 automaticamente
+            region_name=creds["region_name"],
+            aws_access_key_id=creds["aws_access_key_id"],
+            aws_secret_access_key=creds["aws_secret_access_key"],
+            # model_kwargs={"temperature": temperature}  # Bedrock passa i param così
             temperature=temperature
         )
 

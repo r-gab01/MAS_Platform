@@ -8,6 +8,7 @@ from app.shared.persistence import team_db
 from app.shared.factories.llm_factory import get_llm_model
 from langchain.agents import create_agent
 from langchain.tools import tool
+from langchain.agents.middleware import SummarizationMiddleware
 
 
 def _create_worker_tool(worker: AgentModel):
@@ -34,8 +35,6 @@ def _create_worker_tool(worker: AgentModel):
     @tool(worker.name, description=worker.description)
     def call_worker_agent(query: str) -> str:
         """Delega il task all'agente specifico."""
-        # Invoca l'agente. Nota: qui potresti voler passare la history
-        #TODO: Aggiungere memoria della chat passando i messaggi passati come contesto
         response = worker_agent.invoke({"messages": [HumanMessage(content=query)]})
         return response["messages"][-1].content
 
@@ -72,7 +71,14 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
         model=supervisor_model,
         system_prompt=team.supervisor.prompt.system_prompt,
         tools=tools,
-        checkpointer=checkpointer # Importante per la memoria della chat!
+        middleware=[
+            SummarizationMiddleware(
+                model=get_llm_model(provider="aws-converse", model_name="eu.amazon.nova-micro-v1:0"),
+                max_tokens_before_summary=4000,
+                messages_to_keep=3
+            )
+        ],
+        checkpointer=checkpointer# memoria della chat!
     )
 
     return supervisor_graph

@@ -4,5 +4,6 @@ from app.shared.persistence.models.prompt_model import PromptModel  # registriam
 from app.shared.persistence.models.agent_model import AgentModel
 from app.shared.persistence.models.team_model import TeamModel
 from app.shared.persistence.models.llm_model import LLMModel
+from app.shared.persistence.models.thread_model import ChatThreadModel
 
-__all__ = ["Base", "PromptModel", "AgentModel", "TeamModel", "LLMModel"]     # tramite questo ogni classe può importare questi oggetti direttamente da shared.persistence.models
+__all__ = ["Base", "PromptModel", "AgentModel", "TeamModel", "LLMModel", "ChatThreadModel"]     # tramite questo ogni classe può importare questi oggetti direttamente da shared.persistence.models
