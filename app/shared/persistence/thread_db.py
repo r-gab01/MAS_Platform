@@ -1,6 +1,6 @@
 import uuid
 from typing import Optional
-
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.shared.persistence.models.thread_model import ChatThreadModel
@@ -27,6 +27,16 @@ def get_thread(db: Session, thread_id: str) -> Optional[ChatThreadModel]:
     return db.query(ChatThreadModel) \
         .filter(ChatThreadModel.thread_id == thread_id).first()
 
+def update_thread(db: Session, thread_id: str, old_thread: ChatThreadModel) -> Optional[ChatThreadModel]:
+    """
+    Aggiorna il timestamp 'updated_at' del thread al momento corrente.
+    Serve per far risalire la chat in cima alla lista quando arriva un nuovo messaggio.
+    """
+    old_thread.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(old_thread)
+
+    return old_thread
 
 def delete_thread(db: Session, db_thread: ChatThreadModel):
     """

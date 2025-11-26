@@ -13,6 +13,7 @@ from app.shared.persistence import team_db, message_db
 from app.shared.persistence.db_client import get_db
 from app.shared.factories.checkpointer_factory import get_checkpointer
 from app.shared.persistence.models.message_model import MessageType
+from app.shared.schemas.message_schemas import ChatMessageRead
 from app.shared.schemas.thread_schemas import ChatThreadCreate, ChatThreadRead
 
 router = APIRouter(
@@ -68,7 +69,7 @@ async def chat_with_thread(
                                 detail=f"Team con ID {payload.team_id} non trovato. Impossibile avviare la chat.")
 
         # 2. Creiamo la nuova chat (thread) nel db se non esiste
-        thread_service.create_thread_if_not_exists(     # creo chat
+        thread_service.create_update_thread(     # creo chat
             db=db,
             thread_data=ChatThreadCreate(
                 thread_id=thread_id,
@@ -161,16 +162,35 @@ async def chat_with_thread(
 
 
 @router.get("", response_model=list[ChatThreadRead])
-async def read_all_chats(db: Session = Depends(get_db)):
+async def read_all_threads(db: Session = Depends(get_db)):
     """
     Ottiene la lista di tutte le chat avviate dall'utente
     """
 
     try:
-        return thread_service.get_chats_list(db=db)
+        return thread_service.get_threads_list(db=db)
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+@router.get("/{thread_id}/messages", response_model=list[ChatMessageRead])
+def get_messages(
+        thread_id: str,
+        db: Session = Depends(get_db),
+):
+    """
+    Ottiene lo storico dei messaggi per una specifica chat.
+    Da chiamare al caricamento della pagina.
+    """
+    try:
+        messages = message_db.get_thread_history(
+            db=db,
+            thread_id=thread_id
+        )
+        return messages
+
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Thread ID non valido")
 
 
 @router.delete("/{thread_id}", status_code=status.HTTP_204_NO_CONTENT)
