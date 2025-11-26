@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -11,7 +12,8 @@ def create_thread_if_not_exists(db: Session, thread_data: ChatThreadCreate) -> O
     """
         Logica di business per creare un thread chat solo se non eisiste già
     """
-    exists = thread_db.get_thread(db=db, thread_id=thread_data.thread_id)
+    # tid_uuid = uuid.UUID(str(thread_data.thread_id)) TODO: usare
+    exists = thread_db.get_thread(db=db, thread_id=thread_data.thread_id)    #TODO: tid_uuid
     if not exists:
         new_thread = thread_db.create_thread(db=db, thread_data=thread_data)
         return new_thread
@@ -25,7 +27,7 @@ def get_chats_list(db: Session) -> list[ChatThreadModel]:
     return threads
 
 
-def delete_agent(db: Session, thread_id: str):
+def delete_thread(db: Session, thread_id: str):
     """
     Logica di business per eliminare una chat
     """

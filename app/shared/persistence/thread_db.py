@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -16,7 +17,7 @@ def create_thread(db: Session, thread_data: ChatThreadCreate) -> Optional[ChatTh
     return db_thread
 
 
-def get_all_threads(db: Session) -> list[ChatThreadModel]:
+def get_all_threads(db: Session):
     """Restituisce le ultime chat ordinate per data."""
     return db.query(ChatThreadModel).all()
 

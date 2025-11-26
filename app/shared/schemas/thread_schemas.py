@@ -1,8 +1,11 @@
+import uuid
+
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
 class ChatThreadBase(BaseModel):
+    # thread_id: uuid.UUID = Field(..., description="UUID generato dal client") #TODO: questa è la primary key
     thread_id: str = Field(..., description="UUID generato dal client")
     title: Optional[str] = Field(None, description="Titolo della conversazione")
 
