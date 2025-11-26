@@ -71,13 +71,13 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
         model=supervisor_model,
         system_prompt=team.supervisor.prompt.system_prompt,
         tools=tools,
-        #middleware=[
-        #    SummarizationMiddleware(
-        #        model=get_llm_model(provider="aws-converse", model_name="eu.amazon.nova-micro-v1:0"),
+        middleware=[
+            SummarizationMiddleware(
+                model=get_llm_model(provider="aws-converse", model_name="eu.amazon.nova-micro-v1:0"),
         #        max_tokens_before_summary=4000,
-        #        messages_to_keep=3
-        #    )
-        #],
+                messages_to_keep=3
+            )
+        ],
         checkpointer=checkpointer # memoria della chat!
     )
 
