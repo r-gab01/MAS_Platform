@@ -10,6 +10,12 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain.agents.middleware import SummarizationMiddleware
 
+# WebSearch
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_community.tools import DuckDuckGoSearchRun
+
+from app.shared.security.credential_manager import credential_manager
+
 
 def _create_worker_tool(worker: AgentModel):
     """
@@ -52,7 +58,7 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
     if not team:
         raise ValueError(f"Team con id='{team_id}' non trovato")
 
-    # 2. Costruisco i tool per ogni worker
+    # 2. Costruisco il tool per ogni worker
     tools = []
     for worker in team.workers:
         worker_tool = _create_worker_tool(worker)
@@ -84,64 +90,22 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
     return supervisor_graph
 
 
-"""
-class TeamBuilder:
-    '''Registry per gestire team, agenti e tool'''
+def create_web_search_tool(deep=3):
+    """
+        Restituisce l'istanza del tool WebSearch con TavilySearch e DuckDuckGo configurata.
+    """
+    tavily_key = credential_manager.get_tavily_api_key()
 
-    def __init__(self):
-        self._agents = {}
-        self._tools = {}
-        self._teams = {}
-
-
-    def build_agent_tool(self, team_model: TeamModel):
-        '''
-        Registra tutti i worker di un team come agenti e tool.
-        '''
-        workers = team_model.workers
-        if not workers:
-            return None
-
-        for worker in workers:
-            # Creo il model e il relativo agent per questo worker
-            model = get_azure_model(worker.model_deployment, worker.temperature)
-            agent = create_agent(model=model, system_prompt=worker.prompt.system_prompt, name=worker.name)
-
-            @tool(worker.name, description=worker.description)
-            def call_agent(argument: str) -> str:
-                result = agent.invoke({"messages": [{"role": "user", "content": argument}]})
-                return result["messages"][-1].content
-
-            # Salva nel registry
-            self._agents[worker.name] = agent
-            self._tools[worker.name] = call_agent
-
-            print(f"✓ Agente '{worker.name}' registrato con successo")
-            yield agent, call_agent
-
-
-    def register_team(self, team_model: TeamModel):
-        '''Crea un team supervisor con gli agenti specificati'''
-
-        # Verifica che tutti gli agenti richiesti esistano
-        missing = [worker.name for worker in team_model.workers if worker.name not in self._tools]
-        if missing:
-            raise ValueError(f"Agenti non trovati: {missing}")
-
-        # Raccogli i tool degli agenti
-        team_tools = [self._tools[name] for name in team_model.workers]
-
-        # Crea il modello del supervisor
-        supervisor = team_model.supervisor
-        model = get_azure_model(supervisor.model_deployment, supervisor.temperature)
-
-        team = create_agent(
-            model=model,
-            system_prompt=supervisor.prompt.system_prompt,
-            tools=team_tools
+    if tavily_key:
+        return TavilySearchResults(
+            max_results=3,
+            tavily_api_key=tavily_key,
+            description="Un motore di ricerca ottimizzato per ottenere informazioni attuali, news e dati specifici dal web."
         )
 
-        self._teams[team_model.name] = team
-        print(f"✓ Team '{team_model.name}' creato con {len(team_tools)} agenti")
-        return team
-"""
+    # 2. Fallback: DuckDuckGo (Gratis, nessuna key necessaria)
+    else:
+        print("⚠️ Tavily Key non trovata. Uso DuckDuckGo per la ricerca.")
+        return DuckDuckGoSearchRun(
+            description="Un motore di ricerca web per trovare informazioni generali."
+        )

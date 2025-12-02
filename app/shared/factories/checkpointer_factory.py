@@ -1,5 +1,7 @@
-# Usiamo PostgreSQL per la memoria (checkpointing). Il checkpointing permette di avere persistenza dei dati e riprendere conversazioni interrotte.
-# Tramite questa factory abbiamo un gestore centralizzato per il pool di connessioni. Il pool permette di non aprire una nuova connessione al DB ad ogni messaggio.
+# Usiamo PostgreSQL per la memoria (checkpointing). Il checkpointing permette di
+# avere persistenza dei dati e riprendere conversazioni interrotte.
+# Tramite questa factory abbiamo un gestore centralizzato per il pool di connessioni.
+# Il pool permette di non aprire una nuova connessione al DB ad ogni messaggio.
 
 import os
 from contextlib import asynccontextmanager

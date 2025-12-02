@@ -29,5 +29,12 @@ class CredentialManager:
             "region_name": os.getenv("AWS_REGION", "us-east-1")
         }
 
+    def get_tavily_api_key(self) -> str:
+        """
+        Recuper api key per Tavily Search, usato per costruire web search tool
+        """
+        key = os.getenv("TAVILY_API_KEY")
+        return key
+
 # Istanza singleton
 credential_manager = CredentialManager()
