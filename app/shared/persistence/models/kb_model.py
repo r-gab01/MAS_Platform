@@ -42,7 +42,7 @@ class DocumentModel(Base):
     )
 
     filename: Mapped[str] = mapped_column(String(255))  # Nome originale file
-    #file_path: Mapped[str] = mapped_column(String)  # Path locale o S3 key
+    file_path: Mapped[str] = mapped_column(String)  # Path locale o S3 key
     file_type: Mapped[str] = mapped_column(String(50))  # es. application/pdf
     file_size: Mapped[int] = mapped_column(Integer, default=0)  # Bytes
     content_hash: Mapped[str] = mapped_column(String(64), index=True) # SHA-256 del contenuto per rilevare duplicati

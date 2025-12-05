@@ -23,8 +23,16 @@ class DocumentBase(BaseModel):
 class DocumentRead(DocumentBase):
     id: uuid.UUID
     status: ProcessingStatus
-    created_at: datetime
-    error_message: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class DocumentReadFull(DocumentBase):
+    id: uuid.UUID
+
+    #error_message: Optional[str] = None
+    knowledge_base: Optional["KnowledgeBaseRead"]
+    status: ProcessingStatus
 
     class Config:
         from_attributes = True

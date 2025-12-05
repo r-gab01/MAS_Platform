@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import uuid
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.shared.persistence.models import KnowledgeBaseModel
+from app.shared.persistence.models import KnowledgeBaseModel, DocumentModel
 from app.shared.schemas.kb_schemas import KnowledgeBaseCreate
 
 
@@ -75,3 +75,35 @@ def delete_kb(db: Session, kb_model: KnowledgeBaseModel):
     """
     db.delete(kb_model)
     db.commit()
+
+#------------------------------------- DOCUMENTI
+
+def deduplication_check(db: Session, kb_id: uuid.UUID, file_hash: str) -> Optional[DocumentModel]:
+    """
+    Query al db che resistituisce un file con lo stesso contenuto hash dalla KB selezionata
+    """
+    return db.query(DocumentModel).filter(
+        DocumentModel.knowledge_base_id == kb_id,
+        DocumentModel.content_hash == file_hash
+    ).first()
+
+
+def upload_document(db: Session, file_model: DocumentModel) -> DocumentModel:
+    """
+    Aggiunge un nuovo documento caricato alla KB nel db
+    """
+    db.add(file_model)
+    db.commit()
+    db.refresh(file_model)
+    return file_model
+
+
+def get_doc_from_kb(db: Session, kb_id: uuid.UUID, doc_id: uuid.UUID) -> Optional[DocumentModel]:
+    """
+    Query per ottenere doc con id specificato dalla KB specificata
+    """
+
+    return db.query(DocumentModel).filter(
+        DocumentModel.id == doc_id,
+        DocumentModel.knowledge_base_id == kb_id
+    ).first()

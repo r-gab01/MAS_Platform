@@ -7,7 +7,7 @@ from app.shared.persistence.models.llm_model import LLMModel
 from app.shared.persistence.models.thread_model import ChatThreadModel
 from app.shared.persistence.models.message_model import ChatMessageModel
 from app.shared.persistence.models.tool_model import ToolModel
-from app.shared.persistence.models.kb_model import KnowledgeBaseModel
+from app.shared.persistence.models.kb_model import KnowledgeBaseModel, DocumentModel
 
 __all__ = ["Base", "PromptModel", "AgentModel", "TeamModel", "LLMModel", "ChatThreadModel",
-           "ChatMessageModel", "ToolModel", "KnowledgeBaseModel"]     # tramite questo ogni classe può importare questi oggetti direttamente da shared.persistence.models
+           "ChatMessageModel", "ToolModel", "KnowledgeBaseModel", "DocumentModel"]     # tramite questo ogni classe può importare questi oggetti direttamente da shared.persistence.models
