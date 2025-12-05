@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.shared.persistence.models import LLMModel, PromptModel, AgentModel
+from app.shared.persistence.models import LLMModel, PromptModel, AgentModel, ToolModel
 from app.shared.schemas.agent_schemas import AgentType
 
 
@@ -113,3 +113,25 @@ def seed_agents(db: Session):
     ]
     db.add_all(initial_models)
     db.commit()
+
+
+def seed_tools(db: Session):
+    """Popola il catalogo dei tool disponibili."""
+
+    # Definisci i tool del tuo sistema
+    available_tools = [
+            {
+                "name": "web_search",
+                "display_name": "Ricerca Web (Tavily)",
+                "description": "Permette all'agente di cercare informazioni in tempo reale su internet."
+            }
+        ]
+
+    for tool_data in available_tools:
+        exists = db.query(ToolModel).filter(ToolModel.name == tool_data["name"]).first()
+        if not exists:
+            new_tool = ToolModel(**tool_data)
+            db.add(new_tool)
+
+    db.commit()
+    print("🌱 Seeding dei tool...")

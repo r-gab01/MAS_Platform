@@ -3,16 +3,19 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from app.shared.persistence.models import AgentModel
+from app.shared.persistence.models import AgentModel, ToolModel
 from app.shared.schemas.agent_schemas import AgentCreate, AgentRead
 
 
-def create_agent(db: Session, agent_schema: AgentCreate) -> AgentModel:
+def create_agent(db: Session, agent_schema: AgentCreate, tools: list[ToolModel]) -> AgentModel:
     """
     Salva un nuovo agente nel DB.
     """
     # 1. Converte lo schema Pydantic (AgentCreate) in un dizionario Python e successivamente in un modello SQLAlchemy (AgentModel)
-    db_agent = AgentModel(**agent_schema.model_dump())
+    db_agent = AgentModel(**agent_schema.model_dump(exclude={'tool_ids','kb_ids'}))
+
+    if tools:
+        db_agent.tools = tools
 
     # 2. Aggiunge alla sessione, fa il commit e aggiorna
     db.add(db_agent)
@@ -23,6 +26,9 @@ def create_agent(db: Session, agent_schema: AgentCreate) -> AgentModel:
 
 
 def get_agent_by_id(db: Session, agent_id: int) -> Optional[AgentModel]:
+    """
+    Query per ottenere (e verificare) esistenza dell'agente con id specificato
+    """
     return db.query(AgentModel).filter(AgentModel.id == agent_id).first()
 
 

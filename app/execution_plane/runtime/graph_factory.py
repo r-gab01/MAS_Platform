@@ -2,22 +2,21 @@
 from langchain_core.messages import HumanMessage
 from sqlalchemy.orm import Session
 
+
 from app.shared.persistence.models import AgentModel, TeamModel
+from app.shared.security.credential_manager import credential_manager
+from app.shared.tools import tools
 
 from app.shared.persistence import team_db
 from app.shared.factories.llm_factory import get_llm_model
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain.agents.middleware import SummarizationMiddleware
-
-# WebSearch
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_community.tools import DuckDuckGoSearchRun
-
-from app.shared.security.credential_manager import credential_manager
 
 
-def _create_worker_tool(worker: AgentModel):
+
+def _create_worker_as_tool(worker: AgentModel):
     """
     Crea un tool che, quando chiamato, invoca l'agente worker.
     """
@@ -29,10 +28,19 @@ def _create_worker_tool(worker: AgentModel):
         max_tokens=None
     )
 
+    worker_tools = []
+    for tool_used in worker.tools:
+        try:
+            tool_instance = create_tool(tool_used.name)
+            worker_tools.append(tool_instance)
+        except ValueError as e:
+            print(f"Errore creazione tool {tool_used.name}: {e}")
+
     # Supponiamo che create_agent restituisca un Runnable/Graph compilato
     worker_agent = create_agent(
         model=model,
-        system_prompt=worker.prompt.system_prompt
+        system_prompt=worker.prompt.system_prompt,
+        tools=worker_tools,
     )
 
     # 2. Avvolgi l'agente in un Tool
@@ -61,7 +69,7 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
     # 2. Costruisco il tool per ogni worker
     tools = []
     for worker in team.workers:
-        worker_tool = _create_worker_tool(worker)
+        worker_tool = _create_worker_as_tool(worker)
         tools.append(worker_tool)
 
     # 3. Crea il Supervisor
@@ -90,22 +98,19 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
     return supervisor_graph
 
 
-def create_web_search_tool(deep=3):
+def create_tool(tool_type: str):
     """
         Restituisce l'istanza del tool WebSearch con TavilySearch e DuckDuckGo configurata.
     """
-    tavily_key = credential_manager.get_tavily_api_key()
-
-    if tavily_key:
+    if tool_type == "web_search":
+        tavily_key = credential_manager.get_tavily_api_key()
         return TavilySearchResults(
-            max_results=3,
-            tavily_api_key=tavily_key,
-            description="Un motore di ricerca ottimizzato per ottenere informazioni attuali, news e dati specifici dal web."
+            max_results=5,
+            tavily_api_key=tavily_key
         )
 
-    # 2. Fallback: DuckDuckGo (Gratis, nessuna key necessaria)
+    # elif tool_type == "nometool":
+        #pass
     else:
-        print("⚠️ Tavily Key non trovata. Uso DuckDuckGo per la ricerca.")
-        return DuckDuckGoSearchRun(
-            description="Un motore di ricerca web per trovare informazioni generali."
-        )
+        raise ValueError(f"Tool '{tool_type}' non supportato dalla factory.")
+

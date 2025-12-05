@@ -1,9 +1,9 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.control_plane.routes import agents, prompts, teams, llm_models
+from app.control_plane.routes import agents, prompts, teams, llm_models, knowledge_bases, tools
 from app.execution_plane.routes import threads
 from app.shared.persistence.db_client import create_db_and_tables, SessionLocal
-from app.shared.persistence.seed import seed_llm_models, seed_prompts, seed_agents
+from app.shared.persistence.seed import seed_llm_models, seed_prompts, seed_agents, seed_tools
 
 
 @asynccontextmanager
@@ -24,6 +24,7 @@ async def lifespan(app: FastAPI):
         seed_llm_models(db)
         seed_prompts(db)
         seed_agents(db)
+        seed_tools(db)
     finally:
         db.close()
     print("✅ Database pronto.")
@@ -49,6 +50,8 @@ def create_app() -> FastAPI:
     application.include_router(teams.router)
     application.include_router(llm_models.router)
     application.include_router(threads.router)
+    application.include_router(knowledge_bases.router)
+    application.include_router(tools.router)
 
     # Endpoint di health check
     @application.get("/", tags=["Health"])

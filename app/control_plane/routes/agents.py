@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 # Importa tutti i pezzi
-from app.shared.schemas.agent_schemas import AgentCreate, AgentRead, AgentBase, AgentReadFull
+from app.shared.schemas.agent_schemas import AgentCreate, AgentRead, AgentReadFull
 from app.control_plane.services import agent_service
 from app.shared.persistence.db_client import get_db
 

@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 from app.shared.schemas.agent_schemas import AgentCreate
-from app.shared.persistence import agent_db, prompt_db
+from app.shared.persistence import agent_db, prompt_db, tool_db, kb_db
 from app.shared.persistence.models import AgentModel, LLMModel
 
 
@@ -11,23 +11,33 @@ def create_agent(db: Session, agent_data: AgentCreate) -> AgentModel:
     Logica di business per creare un agente.
     """
 
-    # Controllo nome agente univoco
+    # 1. Controllo nome agente univoco
     if agent_db.get_agent_by_name(db, agent_data.name):
         raise ValueError(f"Un agente con nome {agent_data.name} esiste già")
 
-    # Controllo: prompt esiste
+    # 2. Controllo prompt esiste
     prompt = prompt_db.get_prompt_by_id(db, agent_data.prompt_id)
     if not prompt:
         raise ValueError(f"Prompt con ID {agent_data.prompt_id} non trovato")
 
-    # Controllo llm_model valido
+    # 3. Controllo llm_model valido
     llm_model = db.query(LLMModel).filter(LLMModel.id == agent_data.llm_model_id).first()
     if not llm_model:
         raise ValueError(f"Modello LLM con id={agent_data.llm_model_id} non trovato")
 
-    # 2. Chiama l'archivista per salvare
+    # 4. Controllo tools esistenti
+    filtered_tools = None
+    if agent_data.tool_ids:
+        filtered_tools = tool_db.filter_tools(db, agent_data.tool_ids)
+
+    '''
+    # 5. Controllo Knowledge Base
+    if agent_data.kb_ids:
+        filtered_kbs = kb_db.filter_kbs(db, agent_data.kb_ids)
+    '''
+
     print(f"Servizio: Creo l'agente '{agent_data.name}'...")
-    db_agent = agent_db.create_agent(db=db, agent_schema=agent_data)
+    db_agent = agent_db.create_agent(db=db, agent_schema=agent_data, tools=filtered_tools)
 
     return db_agent
 
