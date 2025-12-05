@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.shared.persistence.db_client import get_db
 from app.control_plane.services import kb_service
-from app.shared.schemas.kb_schemas import KnowledgeBaseRead, KnowledgeBaseCreate
+from app.shared.schemas.kb_schemas import KnowledgeBaseRead, KnowledgeBaseCreate, KnowledgeBaseReadFull
 
 router = APIRouter(
     prefix="/api/v1/kb",
@@ -39,11 +39,10 @@ def read_kb(db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{kb_id}", response_model=list[KnowledgeBaseRead])
+@router.get("/{kb_id}", response_model=KnowledgeBaseReadFull)
 def read_kb(
         kb_id: uuid.UUID,
         db: Session = Depends(get_db),
-
 ):
     """
     Restituisce la lista di Knowledge Bases nel sistema
@@ -51,4 +50,33 @@ def read_kb(
     try:
         return kb_service.get_kb_by_id(db, kb_id)
     except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.put("/{kb_id}", response_model=KnowledgeBaseReadFull)
+def update_kb(
+        kb_id: uuid.UUID,
+        kb_data: KnowledgeBaseCreate,
+        db: Session = Depends(get_db)
+):
+    """
+    Applica update alla knowledge base selezionata nel sistema
+    """
+    try:
+        return kb_service.update_kb(db, kb_id, kb_data)
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{kb_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_kb(
+        kb_id: uuid.UUID,
+        db: Session = Depends(get_db)
+):
+    """
+    Rimuove la knowledge base selezionata nel sistema
+    """
+    try:
+        kb_service.delete_kb(db, kb_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

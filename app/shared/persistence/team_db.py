@@ -50,7 +50,7 @@ def get_other_team_with_name(db: Session, name: str, team_id: int):
 
 def update_team(db: Session, team_id: int, team_schema: TeamCreate, workers: list[AgentModel]) -> TeamModel:
     """
-    Funzione che aggionra un team nel DB.
+    Funzione che aggiorna un team nel DB.
     """
     # 1. Recupera l'agente esistente
     db_team = get_team_by_id(db=db, team_id=team_id)
