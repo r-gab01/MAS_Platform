@@ -14,7 +14,8 @@ class CredentialManager:
         return {
             "api_key": os.getenv("AZURE_OPENAI_API_KEY"),
             "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
-            "api_version": os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15")
+            "api_version": os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15"),
+            "embedding_deployment": os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
         }
 
     def get_aws_credentials(self) -> Dict[str, str]:
@@ -26,8 +27,15 @@ class CredentialManager:
         return {
             "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
             "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
-            "region_name": os.getenv("AWS_REGION", "us-east-1")
+            "region_name": os.getenv("AWS_REGION", "us-east-1"),
+            "embedding_model_id": os.getenv("AWS_EMBEDDING_MODEL_ID")
         }
+
+    def get_huggingface_credentials(self) -> Dict[str, str]:
+        """
+        Recupera credenziali per HuggingFace Locale.
+        """
+
 
     def get_tavily_api_key(self) -> str:
         """

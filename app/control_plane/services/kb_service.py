@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.shared.persistence.models.kb_model import DocumentModel
 from app.shared.schemas.kb_schemas import KnowledgeBaseCreate, ProcessingStatus
 from app.shared.persistence.models import KnowledgeBaseModel
-from app.shared.persistence import kb_db
+from app.shared.persistence import kb_db, vector_store_db
 from app.shared.storage import storage_provider
 from app.shared.utility.hashing import calculate_file_hash
 
@@ -70,16 +70,26 @@ def delete_kb(db:Session, kb_id: uuid.UUID):
     """
     Logica di business per eliminare kb specificata
     """
-
+    # 1. Verifica esistenza KB
     db_kb = kb_db.get_kb_by_id(db, kb_id)
     if not db_kb:
         raise ValueError(f"La Knowledge Base con id='{kb_id}' non trovata")
-    kb_db.delete_kb(db, db_kb)
+
+    # 2. ELIMINAZIONE VETTORI (Vector DB)
+    collection_name = str(kb_id)
+    try:
+        vector_store_db.delete_collection(collection_name)
+    except Exception as e:
+        raise RuntimeError(f"Errore critico rimozione Vector Store: {str(e)}")
+
+    # 3. ELIMINAZIONE FILE FISICI (Storage)
     try:
         storage_provider.delete_kb_folder(db_kb.id)
     except Exception as e:
         raise RuntimeError(f"Errore durante la rimozione fisica del file: {str(e)}")
 
+    # 4. ELIMINAZIONE KNOWLEDGE BASE e DOCUMENTI da SQL DB
+    kb_db.delete_kb(db, db_kb)
 
 
 def upload_document_to_kb(db: Session, kb_id: uuid.UUID, file: UploadFile) -> DocumentModel:
@@ -130,14 +140,20 @@ def delete_document_from_kb(db: Session, kb_id: uuid.UUID, doc_id: uuid.UUID):
     if not db_doc:
         raise ValueError(f"Documento '{doc_id}' non trovato nella KB '{kb_id}'")
 
-    # 2. Eliminazione Fisica
+    # 3. Elimina vettori relativi al file dal VectorStore
+    try:
+        vector_store_db.delete_documents_from_collection(
+            kb_id=str(db_doc.knowledge_base_id),
+            filename=db_doc.filename,
+            )
+    except Exception as e:
+        raise RuntimeError(f"Errore critico rimozione Vector Store: {str(e)}")
+
+    # 2. Eliminazione Fisica del File
     try:
         storage_provider.delete_file(db_doc.file_path)
     except Exception as e:
         print(f"⚠️ Warning: Impossibile eliminare il file fisico {db_doc.file_path}: {e}")
 
-    # 3. Eliminazione DB
-    db.delete(db_doc)
-    db.commit()
-
-    # 4. (Futuro) Qui dovrai chiamare vector_store_db.delete_vectors(doc_id)
+    # 4. Elimina entry dal DB SQL
+    kb_db.delete_document(db, db_doc)

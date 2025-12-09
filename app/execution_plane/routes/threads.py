@@ -11,7 +11,7 @@ from app.execution_plane.runtime.graph_factory import build_team_graph
 from app.execution_plane.services import thread_service
 from app.shared.persistence import team_db, message_db
 from app.shared.persistence.db_client import get_db
-from app.shared.factories.checkpointer_factory import get_checkpointer
+from app.shared.factories import CheckpointFactory
 from app.shared.persistence.models.message_model import MessageType
 from app.shared.schemas.message_schemas import ChatMessageRead
 from app.shared.schemas.thread_schemas import ChatThreadCreate, ChatThreadRead
@@ -86,7 +86,7 @@ async def chat_with_thread(
         )
 
         # 4. Configura la memoria per questa conversazione specifica. Usiamo il context manager per ottenere il checkpointer asincrono
-        async with get_checkpointer() as checkpointer:
+        async with CheckpointFactory.get_checkpointer() as checkpointer:
 
             config = {"configurable": {"thread_id": thread_id}} #TODO: str(thread_uuid)
             inputs = {"messages": [("user", payload.message)]}

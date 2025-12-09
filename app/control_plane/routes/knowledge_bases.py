@@ -1,10 +1,10 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.shared.persistence.db_client import get_db
-from app.control_plane.services import kb_service
+from app.control_plane.services import kb_service, ingestion_service
 from app.shared.schemas.kb_schemas import KnowledgeBaseRead, KnowledgeBaseCreate, KnowledgeBaseReadFull, DocumentRead, \
     DocumentReadFull
 
@@ -72,10 +72,11 @@ def update_kb(
 @router.delete("/{kb_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_kb(
         kb_id: uuid.UUID,
+        background_tasks: BackgroundTasks,
         db: Session = Depends(get_db)
 ):
     """
-    Rimuove la knowledge base selezionata nel sistema
+    Rimuove la knowledge base selezionata nel sistema: i file in locale, i vettori nel database
     """
     try:
         kb_service.delete_kb(db, kb_id)
@@ -87,8 +88,9 @@ def delete_kb(
 # API DOCUMENTS
 
 @router.post("/{kb_id}/documents", status_code=status.HTTP_201_CREATED, response_model=DocumentReadFull)
-def upload_file_to_kb(
+def upload_doc_to_kb(
     kb_id: uuid.UUID,
+    background_tasks: BackgroundTasks,  # Per svolgere task di ingestion in Background
     file: UploadFile = File(...), # Multipart Form Data
     db: Session = Depends(get_db)
 ):
@@ -103,7 +105,13 @@ def upload_file_to_kb(
          pass
 
     try:
-        return kb_service.upload_document_to_kb(db, kb_id, file)
+        # 1. Upload fisico del documento e creazione record nel db con status PENDING (Sincrono)
+        new_doc = kb_service.upload_document_to_kb(db, kb_id, file)
+
+        # 2. Pipeline di ingestion del documen per il RAG (Asincrono / Background)
+        background_tasks.add_task(run_ingestion_background, new_doc.id, kb_id)
+
+        return new_doc
     except ValueError as e:
         # Errori logici (duplicati, kb non trovata) -> 400 o 409
         raise HTTPException(status_code=400, detail=str(e))
@@ -112,8 +120,22 @@ def upload_file_to_kb(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def run_ingestion_background(doc_id: uuid.UUID, kb_id: uuid.UUID):
+    """
+    Wrapper per avviare la pipeline di ingestion del documento
+    e gestire la sessione DB in Background.
+    """
+    from app.shared.persistence.db_client import SessionLocal
+    # Apriamo una sessione dedicata per il task in background
+    db = SessionLocal()         # Dobbiamo creare una nuova sessione perchè quella dell'API verrà chiusa appena salvato il documento nel DB
+    try:
+        ingestion_service.process_document_task(db, doc_id, kb_id)
+    finally:
+        db.close()
+
+
 @router.delete("/{kb_id}/documents/{doc_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_file_from_kb(
+def delete_doc_from_kb(
     kb_id: uuid.UUID,
     doc_id: uuid.UUID,
     db: Session = Depends(get_db)

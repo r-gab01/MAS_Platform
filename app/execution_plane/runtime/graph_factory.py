@@ -8,7 +8,7 @@ from app.shared.security.credential_manager import credential_manager
 from app.shared.tools import tools
 
 from app.shared.persistence import team_db
-from app.shared.factories.llm_factory import get_llm_model
+from app.shared.factories import LLMFactory
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain.agents.middleware import SummarizationMiddleware
@@ -21,7 +21,7 @@ def _create_worker_as_tool(worker: AgentModel):
     Crea un tool che, quando chiamato, invoca l'agente worker.
     """
     # 1. Crea il modello e l'agente worker
-    model = get_llm_model(
+    model = LLMFactory.get_llm_model(
         provider=worker.llm_model.provider,
         model_name=worker.llm_model.api_model_name,
         temperature=worker.temperature,
@@ -73,7 +73,7 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
         tools.append(worker_tool)
 
     # 3. Crea il Supervisor
-    supervisor_model = get_llm_model(
+    supervisor_model = LLMFactory.get_llm_model(
         provider=team.supervisor.llm_model.provider,
         model_name=team.supervisor.llm_model.api_model_name,
         temperature=team.supervisor.temperature,

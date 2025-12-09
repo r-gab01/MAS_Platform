@@ -71,7 +71,7 @@ def update_kb(db: Session, kb_old_model: KnowledgeBaseModel, kb_data: KnowledgeB
 
 def delete_kb(db: Session, kb_model: KnowledgeBaseModel):
     """
-    Elimina una KB dal DB.
+    Elimina una KB e i relativi documenti dal DB
     """
     db.delete(kb_model)
     db.commit()
@@ -107,3 +107,12 @@ def get_doc_from_kb(db: Session, kb_id: uuid.UUID, doc_id: uuid.UUID) -> Optiona
         DocumentModel.id == doc_id,
         DocumentModel.knowledge_base_id == kb_id
     ).first()
+
+
+def delete_document(db: Session, doc: DocumentModel):
+    """
+    Elimina doc dalla KB sul DB
+    """
+
+    db.delete(doc)
+    db.commit()

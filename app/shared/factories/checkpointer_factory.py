@@ -8,10 +8,70 @@ from contextlib import asynccontextmanager
 from psycopg_pool import AsyncConnectionPool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-# Variabile globale per mantenere il pool di connessioni attivo
-_CHECKPOINT_POOL: AsyncConnectionPool = None
 
+class CheckpointFactory:
+    """
+    Singleton Factory per gestire il pool di connessioni e il checkpointer di LangGraph.
+    """
+    _pool: AsyncConnectionPool = None   # Variabile per gestire il Singleton: mantiene il pool di connessioni attivo
 
+    @staticmethod   # Metodo statico perchè non ha bisogno dell'istanza e delle variabili della classe, recupera solo le credenziali del db
+    def _get_database_url():
+        url = os.getenv("DATABASE_URL")
+        if not url:
+            raise ValueError("DATABASE_URL non impostato")
+        return url
+
+    @classmethod    # metodo di classe: riceve la classe stessa (cls) per gestire le sue variabili e far funzionare il Singleton
+    async def initialize(cls):
+        """Inizializza il pool globale. Da chiamare allo startup dell'app."""
+        if cls._pool is None:
+            print("🔌 CheckpointFactory: Apertura Connection Pool...")
+
+            # 1. Creazione Pool (closed)
+            cls._pool = AsyncConnectionPool(
+                conninfo=cls._get_database_url(),
+                max_size=20,
+                open=False,
+                kwargs={"autocommit": True}
+            )
+
+            # 2. Apertura asincrona esplicita
+            await cls._pool.open()
+            await cls._pool.wait()
+            print("✅ CheckpointFactory: Pool Aperto e pronto.")
+
+    @classmethod
+    async def close(cls):
+        """Chiude il pool. Da chiamare allo shutdown dell'app."""
+        if cls._pool:
+            print("🔌 CheckpointFactory: Chiusura Pool...")
+            await cls._pool.close()
+            cls._pool = None
+
+    @classmethod
+    @asynccontextmanager
+    async def get_checkpointer(cls):
+        """
+        Context manager che restituisce un AsyncPostgresSaver usando il pool condiviso.
+        """
+        if cls._pool is None:
+            # Auto-inizializzazione lazy (opzionale, ma utile per sicurezza)
+            await cls.initialize()
+
+        # Istanzia il saver con il pool esistente (in cls._pool abbiamo un oggetto pool già istanziato: Magia del Singleton)
+        checkpointer = AsyncPostgresSaver(cls._pool)
+
+        # Assicura che le tabelle esistano (idempotente)
+        await checkpointer.setup()
+
+        try:
+            yield checkpointer
+        finally:
+            # Qui non chiudiamo il pool! Il pool vive finché vive l'app.
+            pass
+
+'''
 def get_database_url():
     url = os.getenv("DATABASE_URL")
     if not url:
@@ -68,3 +128,4 @@ async def get_checkpointer():
     await checkpointer.setup()
 
     yield checkpointer
+'''
