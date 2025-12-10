@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from app.shared.persistence.models.kb_model import DocumentModel
 from app.shared.schemas.kb_schemas import KnowledgeBaseCreate, ProcessingStatus
 from app.shared.persistence.models import KnowledgeBaseModel
-from app.shared.persistence import kb_db, vector_store_db
-from app.shared.storage import storage_provider
+from app.shared.persistence import kb_db, vector_db
+from app.shared.blob_storage import storage_provider
 from app.shared.utility.hashing import calculate_file_hash
 
 

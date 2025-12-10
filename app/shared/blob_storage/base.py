@@ -4,7 +4,7 @@ import uuid
 
 class BaseStorageProvider(ABC):
     """
-    Interfaccia astratta per lo storage.
+    Interfaccia astratta per lo blob_storage.
     Tutte le implementazioni (Locale, S3, Azure Blob) devono seguire questo schema.
     """
 

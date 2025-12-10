@@ -1,11 +1,8 @@
 from typing import List
 from langchain_core.documents import Document
 from sqlalchemy import text
-# Importa la nuova Factory
 from app.shared.factories.vector_store_factory import VectorStoreFactory
 
-
-# --- LOGICA DI BUSINESS ---
 
 def add_documents_to_vector_store(kb_id: str, documents: List[Document]):
     """Salva i documenti (chunks) nel DB vettoriale."""
@@ -29,10 +26,6 @@ def delete_documents_from_collection(kb_id: str, filename: str):
     engine = VectorStoreFactory.get_engine()
 
     # 1. Definiamo la query SQL paramtrica.
-    # Spiegazione:
-    # - langchain_pg_embedding: è la tabella standard dove LangChain salva i vettori
-    # - langchain_pg_collection: è la tabella che mappa i nomi delle collection (kb_id)
-    # - cmetadata ->> 'source_file_id': Estrae il valore del campo JSONB come testo
 
     sql = text("""
                DELETE
@@ -51,9 +44,9 @@ def delete_documents_from_collection(kb_id: str, filename: str):
 
             # result.rowcount ci dice quanti chunk sono stati cancellati
             if result.rowcount > 0:
-                print(f"✅ Eliminati {result.rowcount} chunk vettoriali per filename='{filename}' nella KB='{kb_id}'")
+                print(f"Eliminati {result.rowcount} chunk vettoriali per filename='{filename}' nella KB='{kb_id}'")
             else:
-                print(f"⚠️ Nessun vettore trovato per filename='{filename}' (potrebbe essere già vuoto).")
+                print(f"Nessun vettore trovato per filename='{filename}' (potrebbe essere già vuoto).")
 
     except Exception as e:
         print(f"❌ Errore SQL critico durante cancellazione vettori: {e}")

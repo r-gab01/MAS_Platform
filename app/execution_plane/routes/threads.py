@@ -88,7 +88,7 @@ async def chat_with_thread(
         # 4. Configura la memoria per questa conversazione specifica. Usiamo il context manager per ottenere il checkpointer asincrono
         async with CheckpointFactory.get_checkpointer() as checkpointer:
 
-            config = {"configurable": {"thread_id": thread_id}} #TODO: str(thread_uuid)
+            config = {"configurable": {"thread_id": thread_id}}
             inputs = {"messages": [("user", payload.message)]}
 
 

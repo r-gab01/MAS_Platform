@@ -5,7 +5,7 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader, Unstru
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.shared.persistence.models.kb_model import DocumentModel, ProcessingStatus
-from app.shared.persistence import vector_store_db, kb_db
+from app.shared.persistence import vector_db, kb_db
 
 
 def _get_loader(file_path: str):

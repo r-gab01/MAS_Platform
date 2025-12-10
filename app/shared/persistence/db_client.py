@@ -13,7 +13,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL non è impostato nel file .env")
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=20,
+    max_overflow=10
+)
 
 # Factory per creare nuove sessioni di DB
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
