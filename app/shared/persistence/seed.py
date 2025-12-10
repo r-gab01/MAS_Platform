@@ -106,7 +106,7 @@ def seed_agents(db: Session):
             name="ebook_supervisor",
             description="Supervisore nella scrittura di un ebook",
             temperature=0,
-            agent_type=AgentType.WORKER,
+            agent_type=AgentType.SUPERVISOR,
             prompt_id=3,
             llm_model_id=2
         )

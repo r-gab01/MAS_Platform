@@ -1,67 +1,60 @@
-import os
-
-from langchain_postgres import PGVector
-from langchain_core.documents import Document
 from typing import List
-
-from app.shared.factories import EmbeddingFactory
-
-# Nome della tabella dove LangChain salverà i vettori
-VECTOR_TABLE_NAME = "pg_embeddings"
-COLLECTION_TABLE_NAME = "pg_collections"
+from langchain_core.documents import Document
+from sqlalchemy import text
+# Importa la nuova Factory
+from app.shared.factories.vector_store_factory import VectorStoreFactory
 
 
-def get_connection_string():
-    # Usa il driver psycopg (v3) che è quello supportato da langchain-postgres
-    # Assicurati che DATABASE_URL inizi con "postgresql+psycopg://"
-    url = os.getenv("DATABASE_URL")
-    if "postgresql://" in url and "psycopg" not in url:
-        return url.replace("postgresql://", "postgresql+psycopg://")
-    return url
-
-
-def get_vector_store(kb_id: str):
-    """
-    Restituisce un'istanza di PGVector configurata.
-
-    NOTA: Usiamo 'kb_id' come nome della 'collection'. 
-    In questo modo, ogni Knowledge Base è isolata logicamente nel DB.
-    """
-    connection_string = get_connection_string()
-
-    # 1. Ottieni il modello di embedding (es. OpenAI, Titan)
-    # Potresti volerlo configurabile per KB, per ora usiamo default
-    embeddings = EmbeddingFactory.get_embedding_model(provider="huggingface")
-
-    # 2. Inizializza lo store
-    vector_store = PGVector(
-        embeddings=embeddings,
-        collection_name=str(kb_id),     # isoliamo le collections tramite id delle nostre kb
-        connection=connection_string,
-        use_jsonb=True,
-    )
-    return vector_store
-
+# --- LOGICA DI BUSINESS ---
 
 def add_documents_to_vector_store(kb_id: str, documents: List[Document]):
     """Salva i documenti (chunks) nel DB vettoriale."""
-    vector_store = get_vector_store(kb_id)  # fornendo kb_id abbiamo un vector store che punta alla collezione (KnowledgeBase) desiderata
+    # Chiede l'istanza alla Factory (che gestisce il pool sotto il cofano)
+    vector_store = VectorStoreFactory.get_vector_store(kb_id)
     vector_store.add_documents(documents)
 
 
 def delete_collection(kb_id: str):
-    """Elimina una specifica collezione (una nostra KB)."""
-    vector_store = get_vector_store(kb_id)
+    """Elimina una intera collezione."""
+    vector_store = VectorStoreFactory.get_vector_store(kb_id)
     vector_store.delete_collection()
 
-def delete_documents_from_collection(kb_id: str, filename: str):
-    """Rimuove i vettori associati a un documento dalla collezione"""
-    vector_store = get_vector_store(kb_id)
 
-    filter_query={
-        "filename": filename
-    }
+
+def delete_documents_from_collection(kb_id: str, filename: str):
+    """
+    Rimuove i vettori associati a un file specifico usando SQL diretto.
+    È molto più affidabile del metodo .delete() di LangChain.
+    """
+    engine = VectorStoreFactory.get_engine()
+
+    # 1. Definiamo la query SQL paramtrica.
+    # Spiegazione:
+    # - langchain_pg_embedding: è la tabella standard dove LangChain salva i vettori
+    # - langchain_pg_collection: è la tabella che mappa i nomi delle collection (kb_id)
+    # - cmetadata ->> 'source_file_id': Estrae il valore del campo JSONB come testo
+
+    sql = text("""
+               DELETE
+               FROM langchain_pg_embedding
+               WHERE collection_id = (SELECT uuid
+                                      FROM langchain_pg_collection
+                                      WHERE name = :kb_id)
+                 AND cmetadata ->> 'filename' = :filename
+               """)
+
+    # 2. Eseguiamo la transazione
     try:
-        vector_store.delete(filter=filter_query)
+        with engine.connect() as connection:
+            result = connection.execute(sql, {"kb_id": str(kb_id), "filename": str(filename)})
+            connection.commit()  # Fondamentale per rendere effettiva la modifica
+
+            # result.rowcount ci dice quanti chunk sono stati cancellati
+            if result.rowcount > 0:
+                print(f"✅ Eliminati {result.rowcount} chunk vettoriali per filename='{filename}' nella KB='{kb_id}'")
+            else:
+                print(f"⚠️ Nessun vettore trovato per filename='{filename}' (potrebbe essere già vuoto).")
+
     except Exception as e:
-        print(f"❌ Errore durante l'eliminazione del documento {filename}: {e}")
+        print(f"❌ Errore SQL critico durante cancellazione vettori: {e}")
+        raise e

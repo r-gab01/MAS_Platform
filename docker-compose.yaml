@@ -9,9 +9,9 @@ services:
       POSTGRES_PASSWORD: mypassword
     restart: always
     ports:
-      - '55320:5432'
+      - '54320:5432'
     volumes:
-      - pgdatabase_volume:/var/lib/postgresql/data
+      - pgdatabase_volume:/var/lib/postgresql
 
 volumes:
   pgdatabase_volume:
