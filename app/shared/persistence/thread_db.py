@@ -27,7 +27,7 @@ def get_thread(db: Session, thread_id: str) -> Optional[ChatThreadModel]:
     return db.query(ChatThreadModel) \
         .filter(ChatThreadModel.thread_id == thread_id).first()
 
-def update_thread(db: Session, thread_id: str, old_thread: ChatThreadModel) -> Optional[ChatThreadModel]:
+def update_thread(db: Session, old_thread: ChatThreadModel) -> Optional[ChatThreadModel]:
     """
     Aggiorna il timestamp 'updated_at' del thread al momento corrente.
     Serve per far risalire la chat in cima alla lista quando arriva un nuovo messaggio.
