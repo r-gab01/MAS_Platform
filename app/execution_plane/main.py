@@ -39,4 +39,4 @@ def create_app():
     application.include_router(threads.router)
     return application
 
-app = create_app()
+#app = create_app()

@@ -13,10 +13,7 @@ from app.shared.persistence.db_client import get_db
 from app.shared.schemas.message_schemas import ChatMessageRead
 from app.shared.schemas.thread_schemas import ChatThreadRead
 
-router = APIRouter(
-    prefix="/api/v1/threads",
-    tags=["Chat Execution"]
-)
+router = APIRouter()
 
 # Schema di input semplice mandato dal frontend per chattare
 class ChatRequest(BaseModel):
@@ -37,13 +34,16 @@ async def chat_with_thread(
     Endpoint Chat Stream.
     Delega tutta la logica al ThreadService.
     """
-    # Validazione base (se serve convertire UUID, fallo qui o nello schema Pydantic)
 
-    # Delegiamo la generazione dello stream al service
-    # Nota: passiamo 'db' al service. Dato che è una Sessione, dobbiamo assicurarci
-    # che non venga chiusa prima che lo stream finisca.
-    # FastAPI gestisce la chiusura di Depends(get_db) DOPO la risposta.
+    # PASSO 1: VALIDAZIONE
+    await ThreadService.prepare_chat(
+        db=db,
+        team_id=payload.team_id,
+        thread_id=thread_id,
+        message=payload.message
+    )
 
+    # PASSO 2: STREAMING
     stream_generator = ThreadService.run_chat_stream(
         db=db,
         team_id=payload.team_id,

@@ -8,10 +8,7 @@ from app.shared.schemas.agent_schemas import AgentCreate, AgentRead, AgentReadFu
 from app.control_plane.services import agent_service
 from app.shared.persistence.db_client import get_db
 
-router = APIRouter(
-    prefix="/api/v1/agents",
-    tags=["Agents"]  # Per la documentazione automatica
-)
+router = APIRouter()
 
 @router.post("", response_model=AgentRead, status_code=status.HTTP_201_CREATED)     #specifichiamo che come output vogliamo un oggetto AgentRead; pydantic si occuperà di convertire l'AgentModel in AgentRead
 def create_agent(

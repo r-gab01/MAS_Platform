@@ -4,10 +4,7 @@ from app.shared.persistence.db_client import get_db
 from app.shared.persistence.models import LLMModel
 from app.shared.schemas.llm_model_schemas import LLMModelRead
 
-router = APIRouter(
-    prefix="/api/v1/llm-models",
-    tags=["Configuration"]
-)
+router = APIRouter()
 
 @router.get("",response_model=list[LLMModelRead])
 def read_all_llm_models(db: Session = Depends(get_db)):

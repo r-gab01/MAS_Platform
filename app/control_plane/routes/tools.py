@@ -5,10 +5,7 @@ from app.shared.persistence import tool_db
 from app.shared.persistence.db_client import get_db
 from app.shared.schemas.tool_schemas import ToolRead
 
-router = APIRouter(
-    prefix="/api/v1/tools",
-    tags=["Tools"]  # Per la documentazione automatica
-)
+router = APIRouter()
 
 
 @router.get("/tools", response_model=list[ToolRead])

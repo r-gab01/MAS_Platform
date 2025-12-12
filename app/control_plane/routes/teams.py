@@ -5,10 +5,7 @@ from app.shared.schemas.team_schemas import TeamCreate, TeamRead, TeamBase, Team
 from app.shared.persistence.db_client import get_db
 from app.control_plane.services import team_service
 
-router = APIRouter(
-    prefix="/api/v1/teams",
-    tags=["Teams"]
-)
+router = APIRouter()
 
 @router.post("", response_model=TeamRead, status_code=status.HTTP_201_CREATED)
 def create_team(

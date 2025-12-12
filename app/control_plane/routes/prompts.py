@@ -5,10 +5,7 @@ from app.shared.schemas.prompt_schemas import PromptCreate, PromptRead
 from app.control_plane.services import prompt_service
 from app.shared.persistence.db_client import get_db
 
-router = APIRouter(
-    prefix="/api/v1/prompts",
-    tags=["Prompts"],
-)
+router = APIRouter()
 
 @router.post("", response_model=PromptRead, status_code=status.HTTP_201_CREATED)
 def create_prompt(

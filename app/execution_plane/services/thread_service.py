@@ -28,6 +28,42 @@ def clean_langchain_id(dirty_id: str) -> uuid.UUID:
 class ThreadService:
 
     @staticmethod
+    async def prepare_chat(db: Session, team_id: int, thread_id: str, message: str):
+        """wrapper asincrono per la preparazione della chat. Se la preparazione chat fallisce possiamo bloccare tutto."""
+        await asyncio.to_thread(
+            ThreadService._prepare_conversation_sync,
+            db, team_id, thread_id, message
+        )
+
+
+    @staticmethod
+    def _prepare_conversation_sync(db: Session, team_id: int, thread_id: str, message: str):
+        """Verifica team, crea thread e salva messaggio utente."""
+        # 1. Check Team
+        db_team = team_db.get_team_by_id(db=db, team_id=team_id)
+        if not db_team:
+            raise HTTPException(status_code=404, detail=f"Team con id='{team_id}' non trovato.")
+
+        # 2. Upsert Thread
+        db_thread = thread_db.get_thread(db=db, thread_id=thread_id)
+        if not db_thread:
+            thread_db.create_thread(
+                db=db,
+                thread_data=ChatThreadCreate(thread_id=thread_id, title=f"Chat {thread_id[:8]}")
+            )
+        else:
+            thread_db.update_thread(db=db, old_thread=db_thread)
+
+        # 3. Save User Message
+        message_db.add_message(
+            db=db,
+            thread_id=thread_id,
+            content=message,
+            msg_type=MessageType.HUMAN
+        )
+
+
+    @staticmethod
     async def run_chat_stream(
             db: Session,
             team_id: int,
@@ -41,25 +77,16 @@ class ThreadService:
         3. Salvataggio Risposta (Sync -> ThreadPool)
         """
 
-        # --- FASE 1: PREPARAZIONE DATI (SYNC OFF-LOAD) ---
-        # Eseguiamo le query sincrone in un thread separato per non bloccare FastAPI
-        await asyncio.to_thread(
-            ThreadService._prepare_conversation_sync,
-            db, team_id, thread_id, user_message
-        )
-
         # --- FASE 2: ESECUZIONE GRAFO (ASYNC) ---
         async with CheckpointFactory.get_checkpointer() as checkpointer:
+
             # Costruzione grafo
             try:
-                graph = build_team_graph(
-                    db=db,  # importante non scrivere in questa sessione db, ma solo leggere config team
-                    team_id=team_id,
-                    checkpointer=checkpointer
-                )
+                graph = await asyncio.to_thread(build_team_graph, db, team_id, checkpointer)
             except Exception as e:
-                print(f" Errore build grafo: {e}")
-                raise HTTPException(status_code=500, detail="Errore configurazione Team")
+                yield f"data: Error: {str(e)}\n\n"
+                return
+
 
             config = {"configurable": {"thread_id": thread_id}}
             inputs = {"messages": [("user", user_message)]}
@@ -104,32 +131,7 @@ class ThreadService:
                     db, thread_id, final_message_to_save
                 )
 
-    # --- METODI PRIVATI DI SUPPORTO (SYNC) ---
-    @staticmethod
-    def _prepare_conversation_sync(db: Session, team_id: int, thread_id: str, message: str):
-        """Verifica team, crea thread e salva messaggio utente."""
-        # 1. Check Team
-        db_team = team_db.get_team_by_id(db=db, team_id=team_id)
-        if not db_team:
-            raise HTTPException(status_code=404, detail=f"Team con id='{team_id}' non trovato.")
 
-        # 2. Upsert Thread
-        db_thread = thread_db.get_thread(db=db, thread_id=thread_id)
-        if not db_thread:
-            thread_db.create_thread(
-                db=db,
-                thread_data=ChatThreadCreate(thread_id=thread_id, title=f"Chat {thread_id[:8]}")
-            )
-        else:
-            thread_db.update_thread(db=db, old_thread=db_thread)
-
-        # 3. Save User Message
-        message_db.add_message(
-            db=db,
-            thread_id=thread_id,
-            content=message,
-            msg_type=MessageType.HUMAN
-        )
 
     @staticmethod
     def _save_ai_message_sync(db: Session, thread_id: str, ai_msg):

@@ -8,10 +8,7 @@ from app.control_plane.services import kb_service, ingestion_service
 from app.shared.schemas.kb_schemas import KnowledgeBaseRead, KnowledgeBaseCreate, KnowledgeBaseReadFull, DocumentRead, \
     DocumentReadFull
 
-router = APIRouter(
-    prefix="/api/v1/kb",
-    tags=["KnowledgeBases"],
-)
+router = APIRouter()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=KnowledgeBaseRead)
