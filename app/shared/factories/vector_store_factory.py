@@ -16,14 +16,14 @@ class VectorStoreFactory:
     @staticmethod
     def _get_connection_string() -> str:
         """Normalizza la stringa di connessione per il driver psycopg (v3)."""
-        url = os.getenv("POSTGRES_URI", "")
+        url = os.getenv("DATABASE_URL", "")
         if not url:
-            raise ValueError("POSTGRES_URI environment variable is not set.")
+            raise ValueError("DATABASE_URL environment variable is not set.")
 
         # langchain-postgres richiede il driver psycopg 3
 #        if "postgresql://" in url and "psycopg" not in url:
 #            return url.replace("postgresql://", "postgresql+psycopg://")
-#        return url
+        return url
 
     @classmethod
     def get_engine(cls) -> Engine:

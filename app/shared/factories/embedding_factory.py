@@ -54,7 +54,7 @@ class EmbeddingFactory:
             else:
                 device = "cpu"
 
-            print(f"HuggingFace Embeddings caricato su: {device.upper()}")  # Log utile per debug
+            # print(f"HuggingFace Embeddings caricato su: {device.upper()}")  # Log utile per debug
 
             return HuggingFaceEmbeddings(
                 model_name=model_name,

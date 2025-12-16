@@ -1,7 +1,4 @@
 # API: /api/v1/chat/{team_id} (POST per avviare/continuare la chat)
-import uuid
-import re
-
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -35,7 +32,7 @@ async def chat_with_thread(
     Delega tutta la logica al ThreadService.
     """
 
-    # PASSO 1: VALIDAZIONE
+    # PASSO 1: VALIDAZIONE ASINCRONA (PREPARIAMO IL TEAM E LA CHAT DAL DB)
     await ThreadService.prepare_chat(
         db=db,
         team_id=payload.team_id,
@@ -43,7 +40,7 @@ async def chat_with_thread(
         message=payload.message
     )
 
-    # PASSO 2: STREAMING
+    # PASSO 2: STREAMING SINCRONO
     stream_generator = ThreadService.run_chat_stream(
         db=db,
         team_id=payload.team_id,

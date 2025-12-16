@@ -16,7 +16,11 @@ if not DATABASE_URL:
 engine = create_engine(
     DATABASE_URL,
     pool_size=20,
-    max_overflow=10
+    max_overflow=10,
+    pool_timeout=30,  # Tempo massimo di attesa (in secondi) per ottenere una connessione dal pool
+    connect_args={
+        'connect_timeout': 5  # Tempo massimo di attesa (in secondi) per stabilire la connessione TCP/IP iniziale
+    }
 )
 
 # Factory per creare nuove sessioni di DB
