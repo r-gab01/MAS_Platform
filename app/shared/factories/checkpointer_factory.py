@@ -17,9 +17,9 @@ class CheckpointFactory:
 
     @staticmethod   # Metodo statico perchè non ha bisogno dell'istanza e delle variabili della classe, recupera solo le credenziali del db
     def _get_database_url():
-        url = os.getenv("DATABASE_URL")
+        url = os.getenv("POSTGRES_URI")
         if not url:
-            raise ValueError("DATABASE_URL non impostato")
+            raise ValueError("POSTGRES_URI non impostato")
         return url
 
     @classmethod    # metodo di classe: riceve la classe stessa (cls) per gestire le sue variabili e far funzionare il Singleton
