@@ -6,6 +6,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
+from app.shared.persistence.models import AgentModel
 from ..db_client import Base
 
 
@@ -27,6 +28,13 @@ class KnowledgeBaseModel(Base):
         "DocumentModel",
         back_populates="knowledge_base",
         cascade="all, delete-orphan"
+    )
+
+
+    agents: Mapped[List[AgentModel]] = relationship(
+        "AgentModel",
+        secondary="agent_kbs",
+        back_populates="knowledge_bases"
     )
 
 

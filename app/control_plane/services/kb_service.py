@@ -4,6 +4,7 @@ import uuid
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
+from app.shared.factories.vector_store_factory import VectorStoreFactory
 from app.shared.persistence.models.kb_model import DocumentModel
 from app.shared.schemas.kb_schemas import KnowledgeBaseCreate, ProcessingStatus
 from app.shared.persistence.models import KnowledgeBaseModel
@@ -78,7 +79,7 @@ def delete_kb(db:Session, kb_id: uuid.UUID):
     # 2. ELIMINAZIONE VETTORI (Vector DB)
     collection_name = str(kb_id)
     try:
-        vector_store_db.delete_collection(collection_name)
+        vector_db.delete_collection(collection_name)
     except Exception as e:
         raise RuntimeError(f"Errore critico rimozione Vector Store: {str(e)}")
 
@@ -142,7 +143,7 @@ def delete_document_from_kb(db: Session, kb_id: uuid.UUID, doc_id: uuid.UUID):
 
     # 3. Elimina vettori relativi al file dal VectorStore
     try:
-        vector_store_db.delete_documents_from_collection(
+        vector_db.delete_documents_from_collection(
             kb_id=str(db_doc.knowledge_base_id),
             filename=db_doc.filename,
             )

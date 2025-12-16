@@ -15,10 +15,11 @@ def create_agent(db: Session, agent_data: AgentCreate) -> AgentModel:
     if agent_db.get_agent_by_name(db, agent_data.name):
         raise ValueError(f"Un agente con nome {agent_data.name} esiste già")
 
-    # 2. Controllo prompt esiste
-    prompt = prompt_db.get_prompt_by_id(db, agent_data.prompt_id)
-    if not prompt:
-        raise ValueError(f"Prompt con ID {agent_data.prompt_id} non trovato")
+    # 2. Controllo se prompt inserito esiste
+    if agent_data.prompt_id is not None:
+        prompt = prompt_db.get_prompt_by_id(db, agent_data.prompt_id)
+        if not prompt:
+            raise ValueError(f"Prompt con ID {agent_data.prompt_id} non trovato")
 
     # 3. Controllo llm_model valido
     llm_model = db.query(LLMModel).filter(LLMModel.id == agent_data.llm_model_id).first()
@@ -30,14 +31,15 @@ def create_agent(db: Session, agent_data: AgentCreate) -> AgentModel:
     if agent_data.tool_ids:
         filtered_tools = tool_db.filter_tools(db, agent_data.tool_ids)
 
-    '''
     # 5. Controllo Knowledge Base
+    filtered_kbs = None
     if agent_data.kb_ids:
+        print(f"KB_IDS ricevuti: {agent_data.kb_ids}")
         filtered_kbs = kb_db.filter_kbs(db, agent_data.kb_ids)
-    '''
+        print(f"KB filtrate: {len(filtered_kbs)}")
 
     print(f"Servizio: Creo l'agente '{agent_data.name}'...")
-    db_agent = agent_db.create_agent(db=db, agent_schema=agent_data, tools=filtered_tools)
+    db_agent = agent_db.create_agent(db=db, agent_schema=agent_data, tools=filtered_tools, kbs=filtered_kbs)
 
     return db_agent
 

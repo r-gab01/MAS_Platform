@@ -42,6 +42,7 @@ class VectorStoreFactory:
             )
         return cls._engine
 
+
     @classmethod
     def get_vector_store(cls, kb_id: str) -> PGVector:
         """
@@ -50,10 +51,10 @@ class VectorStoreFactory:
         :param kb_id: L'ID della Knowledge Base (usato come nome della collection)
         :return: Istanza pronta all'uso di PGVector
         """
-        # 1. Otteniamo l'Engine condiviso (non ne crea uno nuovo!)
+        # 1. Otteniamo l'Engine condiviso (non ne creo uno nuovo!)
         engine = cls.get_engine()
 
-        # 2. Otteniamo il modello di embedding (tramite la tua altra factory)
+        # 2. Otteniamo il modello di embedding
         embeddings = EmbeddingFactory.get_embedding_model(provider="huggingface")
 
         # 3. Restituiamo l'oggetto PGVector collegato al pool esistente
@@ -63,6 +64,7 @@ class VectorStoreFactory:
             collection_name=str(kb_id),
             use_jsonb=True,
         )
+
 
     @classmethod
     def dispose(cls):

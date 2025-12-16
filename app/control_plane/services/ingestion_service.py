@@ -65,7 +65,7 @@ def process_document_task(db: Session, doc_id: uuid.UUID, kb_id: uuid.UUID):
 
         # 4. Salvataggio Vettoriale (Embedding)
         # Usiamo l'ID della KB come nome della collezione per isolare i dati
-        vector_store_db.add_documents_to_vector_store(
+        vector_db.add_documents_to_vector_store(
             kb_id=str(kb_id),
             documents=chunks
         )

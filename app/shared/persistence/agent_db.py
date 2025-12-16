@@ -3,11 +3,11 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from app.shared.persistence.models import AgentModel, ToolModel
+from app.shared.persistence.models import AgentModel, ToolModel, KnowledgeBaseModel
 from app.shared.schemas.agent_schemas import AgentCreate, AgentRead
 
 
-def create_agent(db: Session, agent_schema: AgentCreate, tools: list[ToolModel]) -> AgentModel:
+def create_agent(db: Session, agent_schema: AgentCreate, tools: list[ToolModel], kbs: list[KnowledgeBaseModel]) -> AgentModel:
     """
     Salva un nuovo agente nel DB.
     """
@@ -16,6 +16,9 @@ def create_agent(db: Session, agent_schema: AgentCreate, tools: list[ToolModel])
 
     if tools:
         db_agent.tools = tools
+
+    if kbs:
+        db_agent.knowledge_bases = kbs
 
     # 2. Aggiunge alla sessione, fa il commit e aggiorna
     db.add(db_agent)

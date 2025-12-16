@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import uuid
-from typing import Optional
+from typing import Optional, Any
 from sqlalchemy.orm import Session
 from app.shared.persistence.models import KnowledgeBaseModel, DocumentModel
 from app.shared.schemas.kb_schemas import KnowledgeBaseCreate

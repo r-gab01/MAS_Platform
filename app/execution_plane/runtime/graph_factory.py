@@ -4,15 +4,13 @@ from sqlalchemy.orm import Session
 
 
 from app.shared.persistence.models import AgentModel, TeamModel
-from app.shared.security.credential_manager import credential_manager
-from app.shared.tools import tools
+from app.shared.tools import toolFactory
 
 from app.shared.persistence import team_db
 from app.shared.factories import LLMFactory
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain.agents.middleware import SummarizationMiddleware
-from langchain_community.tools.tavily_search import TavilySearchResults
 
 
 
@@ -29,17 +27,26 @@ def _create_worker_as_tool(worker: AgentModel):
     )
 
     worker_tools = []
+    # Creazione Tools dell'agente
     for tool_used in worker.tools:
         try:
-            tool_instance = create_tool(tool_used.name)
+            tool_instance = toolFactory.create_tool(tool_used.name)
             worker_tools.append(tool_instance)
         except ValueError as e:
             print(f"Errore creazione tool {tool_used.name}: {e}")
 
+    # Creazione tool per RAG con KnowledgeBases
+    for kb in worker.knowledge_bases:
+        try:
+            kb_tool_instance = toolFactory.create_rag_tool(kb.id)
+            worker_tools.append(kb_tool_instance)
+        except ValueError as e:
+            print(f"Errore creazione kb {kb.id}: {e}")
+
     # Supponiamo che create_agent restituisca un Runnable/Graph compilato
     worker_agent = create_agent(
         model=model,
-        system_prompt=worker.prompt.system_prompt,
+        system_prompt=worker.prompt.system_prompt if worker.prompt else None,
         tools=worker_tools,
     )
 
@@ -66,13 +73,13 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
     if not team:
         raise ValueError(f"Team con id='{team_id}' non trovato")
 
-    # 2. Costruisco il tool per ogni worker
+    # 2. Costruisco ogni worker come tool per il supervisor
     tools = []
     for worker in team.workers:
         worker_tool = _create_worker_as_tool(worker)
         tools.append(worker_tool)
 
-    # 3. Crea il Supervisor
+    # 3. Crea il modello LLM del Supervisor
     supervisor_model = LLMFactory.get_llm_model(
         provider=team.supervisor.llm_model.provider,
         model_name=team.supervisor.llm_model.api_model_name,
@@ -80,10 +87,19 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
         max_tokens=None
     )
 
-    # Il supervisor è un agente che ha accesso ai tool dei worker
+    # 4. Aggiungo Basi di conoscenza al supervisor
+    for kb in team.supervisor.knowledge_bases:
+        try:
+            kb_tool_instance = toolFactory.create_rag_tool(kb.id, kb.description)
+            tools.append(kb_tool_instance)
+        except ValueError as e:
+            print(f"Errore creazione kb {kb.id}: {e}")
+
+
+    # 5. Creo l'agente Supervisor. Il supervisor ha accesso ai workers come tool
     supervisor_graph = create_agent(
         model=supervisor_model,
-        system_prompt=team.supervisor.prompt.system_prompt,
+        system_prompt=team.supervisor.prompt.system_prompt if team.supervisor.prompt else None,
         tools=tools,
         middleware=[
             SummarizationMiddleware(
@@ -98,19 +114,5 @@ def build_team_graph(db: Session, team_id: int, checkpointer=None):
     return supervisor_graph
 
 
-def create_tool(tool_type: str):
-    """
-        Restituisce l'istanza del tool WebSearch con TavilySearch e DuckDuckGo configurata.
-    """
-    if tool_type == "web_search":
-        tavily_key = credential_manager.get_tavily_api_key()
-        return TavilySearchResults(
-            max_results=5,
-            tavily_api_key=tavily_key
-        )
 
-    # elif tool_type == "nometool":
-        #pass
-    else:
-        raise ValueError(f"Tool '{tool_type}' non supportato dalla factory.")
 

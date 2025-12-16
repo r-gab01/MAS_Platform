@@ -46,7 +46,7 @@ class AgentModel(Base):
     prompt_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("prompts.id", ondelete="RESTRICT"),
-        nullable=False
+        nullable=True
     )
 
     # Relationship: un agente ha un prompt.
@@ -94,5 +94,5 @@ class AgentModel(Base):
     knowledge_bases: Mapped[List["KnowledgeBaseModel"]] = relationship(
         "KnowledgeBaseModel",
         secondary="agent_kbs",
-        lazy="selectin"
+        back_populates="agents"
     )
