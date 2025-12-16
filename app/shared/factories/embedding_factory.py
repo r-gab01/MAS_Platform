@@ -4,6 +4,8 @@ from langchain_aws import BedrockEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
 from app.shared.security.credential_manager import credential_manager
 
+import torch
+
 
 class EmbeddingFactory:
     """
@@ -44,9 +46,15 @@ class EmbeddingFactory:
 
         # --- HUGGINGFACE ---
         elif provider == "huggingface":
-
             model_name = "sentence-transformers/all-MiniLM-L6-v2"
-            device = "cuda"
+
+            # Rilevamento automatico del device
+            if torch.cuda.is_available():
+                device = "cuda"
+            else:
+                device = "cpu"
+
+            print(f"HuggingFace Embeddings caricato su: {device.upper()}")  # Log utile per debug
 
             return HuggingFaceEmbeddings(
                 model_name=model_name,

@@ -69,7 +69,7 @@ def get_all_agents(db: Session) -> list[AgentModel]:
     return db.query(AgentModel).all()
 
 
-def update_agent(db: Session, agent_schema: AgentCreate, agent_id: int) -> Optional[AgentModel]:
+def update_agent(db: Session, agent_schema: AgentCreate, agent_id: int, tools: list[ToolModel], kbs: list[KnowledgeBaseModel]) -> Optional[AgentModel]:
     """
     Aggiorna un agente esistente nel DB.
     """
@@ -80,7 +80,14 @@ def update_agent(db: Session, agent_schema: AgentCreate, agent_id: int) -> Optio
     for key, value in agent_schema.model_dump(exclude_unset=True).items():
         setattr(db_agent, key, value)
 
-    # 3. Commit e refresh
+    # 3. Assegna tool e KBs
+    if tools:
+        db_agent.tools = tools
+
+    if kbs:
+        db_agent.knowledge_bases = kbs
+
+    # 4. Commit e refresh
     db.commit()
     db.refresh(db_agent)
 
