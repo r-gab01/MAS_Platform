@@ -1,0 +1,2031 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Enterprise RAG Platform",
+    "description": "Unified API for Control Plane (Management) and Execution Plane (Runtime)",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/control/teams": {
+      "get": {
+        "tags": [
+          "Control Plane - Teams"
+        ],
+        "summary": "Read All Teams",
+        "description": "Restituisce la lista di teams creati",
+        "operationId": "read_all_teams_api_v1_control_teams_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TeamRead"
+                  },
+                  "type": "array",
+                  "title": "Response Read All Teams Api V1 Control Teams Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Control Plane - Teams"
+        ],
+        "summary": "Create Team",
+        "description": "Crea un nuovo team nel sistema",
+        "operationId": "create_team_api_v1_control_teams_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/teams/{team_id}": {
+      "get": {
+        "tags": [
+          "Control Plane - Teams"
+        ],
+        "summary": "Read Team",
+        "description": "Restituisce il team con id specificato",
+        "operationId": "read_team_api_v1_control_teams__team_id__get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Team Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamReadFull"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Control Plane - Teams"
+        ],
+        "summary": "Delete Team",
+        "description": "Cancella il team con id specificato dal sistema",
+        "operationId": "delete_team_api_v1_control_teams__team_id__delete",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Team Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/teams/team_id}": {
+      "put": {
+        "tags": [
+          "Control Plane - Teams"
+        ],
+        "summary": "Update Team",
+        "description": "Aggiorna un team nel sistema",
+        "operationId": "update_team_api_v1_control_teams_team_id__put",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Team Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/agents": {
+      "get": {
+        "tags": [
+          "Control Plane - Agents"
+        ],
+        "summary": "Read All Agents",
+        "description": "Restituisce la lista di agenti creati",
+        "operationId": "read_all_agents_api_v1_control_agents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AgentRead"
+                  },
+                  "type": "array",
+                  "title": "Response Read All Agents Api V1 Control Agents Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Control Plane - Agents"
+        ],
+        "summary": "Create Agent",
+        "description": "Crea un nuovo agente nel sistema.",
+        "operationId": "create_agent_api_v1_control_agents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/agents/{agent_id}": {
+      "get": {
+        "tags": [
+          "Control Plane - Agents"
+        ],
+        "summary": "Read Agent",
+        "description": "Restituisce l'agente con id specificato",
+        "operationId": "read_agent_api_v1_control_agents__agent_id__get",
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentReadFull"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Control Plane - Agents"
+        ],
+        "summary": "Update Agent",
+        "description": "Aggiorna l'agente nel sistema con i nuovi valori",
+        "operationId": "update_agent_api_v1_control_agents__agent_id__put",
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentReadFull"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Control Plane - Agents"
+        ],
+        "summary": "Delete Agent",
+        "description": "Cancella l'agente con id specificato dal sistema",
+        "operationId": "delete_agent_api_v1_control_agents__agent_id__delete",
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/tools/tools": {
+      "get": {
+        "tags": [
+          "Control Plane - Tools"
+        ],
+        "summary": "Get Tools",
+        "description": "Restituisce la lista di tool del sistema",
+        "operationId": "get_tools_api_v1_control_tools_tools_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ToolRead"
+                  },
+                  "type": "array",
+                  "title": "Response Get Tools Api V1 Control Tools Tools Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/prompts": {
+      "get": {
+        "tags": [
+          "Control Plane - Prompts"
+        ],
+        "summary": "Read All Prompts",
+        "description": "Restituisce la lista di prompt creati.",
+        "operationId": "read_all_prompts_api_v1_control_prompts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PromptRead"
+                  },
+                  "type": "array",
+                  "title": "Response Read All Prompts Api V1 Control Prompts Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Control Plane - Prompts"
+        ],
+        "summary": "Create Prompt",
+        "description": "Crea un nuovo prompt nel sistema.",
+        "operationId": "create_prompt_api_v1_control_prompts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromptCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/prompts/{prompt_id}": {
+      "get": {
+        "tags": [
+          "Control Plane - Prompts"
+        ],
+        "summary": "Read Prompt",
+        "description": "Restituisce il prompt con id specificato",
+        "operationId": "read_prompt_api_v1_control_prompts__prompt_id__get",
+        "parameters": [
+          {
+            "name": "prompt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Prompt Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Control Plane - Prompts"
+        ],
+        "summary": "Update Prompt",
+        "operationId": "update_prompt_api_v1_control_prompts__prompt_id__put",
+        "parameters": [
+          {
+            "name": "prompt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Prompt Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromptCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Control Plane - Prompts"
+        ],
+        "summary": "Delete Prompt",
+        "operationId": "delete_prompt_api_v1_control_prompts__prompt_id__delete",
+        "parameters": [
+          {
+            "name": "prompt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Prompt Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/llm": {
+      "get": {
+        "tags": [
+          "Control Plane - LLM Models"
+        ],
+        "summary": "Read All Llm Models",
+        "description": "Restituisce la lista degli LLM Models",
+        "operationId": "read_all_llm_models_api_v1_control_llm_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LLMModelRead"
+                  },
+                  "type": "array",
+                  "title": "Response Read All Llm Models Api V1 Control Llm Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/llm/{llm_model_id}": {
+      "get": {
+        "tags": [
+          "Control Plane - LLM Models"
+        ],
+        "summary": "Read Llm Model",
+        "description": "Restituisce il prompt specificato",
+        "operationId": "read_llm_model_api_v1_control_llm__llm_model_id__get",
+        "parameters": [
+          {
+            "name": "llm_model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Llm Model Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMModelRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/kb": {
+      "get": {
+        "tags": [
+          "Control Plane - Knowledge Bases"
+        ],
+        "summary": "Read Kb",
+        "description": "Restituisce la lista di Knowledge Bases nel sistema",
+        "operationId": "read_kb_api_v1_control_kb_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/KnowledgeBaseRead"
+                  },
+                  "type": "array",
+                  "title": "Response Read Kb Api V1 Control Kb Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Control Plane - Knowledge Bases"
+        ],
+        "summary": "Create Knowledge Base",
+        "description": "Crea una nuova knowledge base nel sistema",
+        "operationId": "create_knowledge_base_api_v1_control_kb_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeBaseCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/kb/{kb_id}": {
+      "get": {
+        "tags": [
+          "Control Plane - Knowledge Bases"
+        ],
+        "summary": "Read Kb",
+        "description": "Restituisce la lista di Knowledge Bases nel sistema",
+        "operationId": "read_kb_api_v1_control_kb__kb_id__get",
+        "parameters": [
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Kb Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseReadFull"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Control Plane - Knowledge Bases"
+        ],
+        "summary": "Update Kb",
+        "description": "Applica update alla knowledge base selezionata nel sistema",
+        "operationId": "update_kb_api_v1_control_kb__kb_id__put",
+        "parameters": [
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Kb Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeBaseCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseReadFull"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Control Plane - Knowledge Bases"
+        ],
+        "summary": "Delete Kb",
+        "description": "Rimuove la knowledge base selezionata nel sistema: i file in locale, i vettori nel database",
+        "operationId": "delete_kb_api_v1_control_kb__kb_id__delete",
+        "parameters": [
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Kb Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/kb/{kb_id}/documents": {
+      "post": {
+        "tags": [
+          "Control Plane - Knowledge Bases"
+        ],
+        "summary": "Upload Doc To Kb",
+        "description": "Carica un file (PDF, TXT, MD) nella Knowledge Base specificata.",
+        "operationId": "upload_doc_to_kb_api_v1_control_kb__kb_id__documents_post",
+        "parameters": [
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Kb Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_doc_to_kb_api_v1_control_kb__kb_id__documents_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentReadFull"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control/kb/{kb_id}/documents/{doc_id}": {
+      "delete": {
+        "tags": [
+          "Control Plane - Knowledge Bases"
+        ],
+        "summary": "Delete Doc From Kb",
+        "description": "Elimina definitivamente un documento e il file associato dal sistema.",
+        "operationId": "delete_doc_from_kb_api_v1_control_kb__kb_id__documents__doc_id__delete",
+        "parameters": [
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Kb Id"
+            }
+          },
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Doc Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/execution/threads/{thread_id}/chat": {
+      "post": {
+        "tags": [
+          "Execution Plane - Chat Threads"
+        ],
+        "summary": "Chat With Thread",
+        "description": "Endpoint Chat Stream.\nDelega tutta la logica al ThreadService.",
+        "operationId": "chat_with_thread_api_v1_execution_threads__thread_id__chat_post",
+        "parameters": [
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/execution/threads": {
+      "get": {
+        "tags": [
+          "Execution Plane - Chat Threads"
+        ],
+        "summary": "Read All Threads",
+        "description": "Ottiene la lista di tutte le chat avviate dall'utente",
+        "operationId": "read_all_threads_api_v1_execution_threads_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChatThreadRead"
+                  },
+                  "type": "array",
+                  "title": "Response Read All Threads Api V1 Execution Threads Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/execution/threads/{thread_id}/messages": {
+      "get": {
+        "tags": [
+          "Execution Plane - Chat Threads"
+        ],
+        "summary": "Get Messages",
+        "description": "Ottiene lo storico dei messaggi per una specifica chat.\nDa chiamare al caricamento della pagina.",
+        "operationId": "get_messages_api_v1_execution_threads__thread_id__messages_get",
+        "parameters": [
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatMessageRead"
+                  },
+                  "title": "Response Get Messages Api V1 Execution Threads  Thread Id  Messages Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/execution/threads/{thread_id}": {
+      "delete": {
+        "tags": [
+          "Execution Plane - Chat Threads"
+        ],
+        "summary": "Delete Thread",
+        "description": "Cancella il thread con id specificato dal sistema",
+        "operationId": "delete_thread_api_v1_execution_threads__thread_id__delete",
+        "parameters": [
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome dell'agent"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Descrizione del team"
+          },
+          "prompt_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Id",
+            "description": "ID del prompt da associare"
+          },
+          "llm_model_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Llm Model Id",
+            "description": "ID del modello LLM da associare"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Temperature",
+            "description": "Temperatura del modello LLM",
+            "default": 0
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType",
+            "default": "worker"
+          },
+          "tool_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Tool Ids"
+          },
+          "kb_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kb Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "llm_model_id"
+        ],
+        "title": "AgentCreate"
+      },
+      "AgentRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome dell'agent"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Descrizione del team"
+          },
+          "prompt_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Id",
+            "description": "ID del prompt da associare"
+          },
+          "llm_model_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Llm Model Id",
+            "description": "ID del modello LLM da associare"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Temperature",
+            "description": "Temperatura del modello LLM",
+            "default": 0
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType",
+            "default": "worker"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "llm_model_id",
+          "id"
+        ],
+        "title": "AgentRead"
+      },
+      "AgentReadFull": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome dell'agent"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Descrizione del team"
+          },
+          "llm_model_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Llm Model Id",
+            "description": "ID del modello LLM da associare"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Temperature",
+            "description": "Temperatura del modello LLM",
+            "default": 0
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType",
+            "default": "worker"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromptRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "llm_model": {
+            "$ref": "#/components/schemas/LLMModelRead"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolRead"
+            },
+            "type": "array",
+            "title": "Tools"
+          },
+          "knowledge_bases": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBaseRead"
+            },
+            "type": "array",
+            "title": "Knowledge Bases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "llm_model_id",
+          "id",
+          "prompt",
+          "llm_model",
+          "tools",
+          "knowledge_bases"
+        ],
+        "title": "AgentReadFull"
+      },
+      "AgentType": {
+        "type": "string",
+        "enum": [
+          "supervisor",
+          "worker"
+        ],
+        "title": "AgentType"
+      },
+      "Body_upload_doc_to_kb_api_v1_control_kb__kb_id__documents_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_doc_to_kb_api_v1_control_kb__kb_id__documents_post"
+      },
+      "ChatMessageRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MessageType",
+            "description": "Tipo messaggio: 'human' o 'ai'"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "content",
+          "created_at"
+        ],
+        "title": "ChatMessageRead"
+      },
+      "ChatRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Il messaggio dell'utente"
+          },
+          "team_id": {
+            "type": "integer",
+            "title": "Team Id",
+            "description": "L'ID del team che deve rispondere"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "team_id"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatThreadRead": {
+        "properties": {
+          "thread_id": {
+            "type": "string",
+            "title": "Thread Id",
+            "description": "UUID generato dal client"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Titolo della conversazione"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "thread_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ChatThreadRead"
+      },
+      "DocumentRead": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "file_type": {
+            "type": "string",
+            "title": "File Type"
+          },
+          "file_size": {
+            "type": "integer",
+            "title": "File Size"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProcessingStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filename",
+          "file_type",
+          "file_size",
+          "id",
+          "status"
+        ],
+        "title": "DocumentRead"
+      },
+      "DocumentReadFull": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "file_type": {
+            "type": "string",
+            "title": "File Type"
+          },
+          "file_size": {
+            "type": "integer",
+            "title": "File Size"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "knowledge_base": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KnowledgeBaseRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProcessingStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filename",
+          "file_type",
+          "file_size",
+          "id",
+          "knowledge_base",
+          "status"
+        ],
+        "title": "DocumentReadFull"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "KnowledgeBaseCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "KnowledgeBaseCreate"
+      },
+      "KnowledgeBaseRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id"
+        ],
+        "title": "KnowledgeBaseRead"
+      },
+      "KnowledgeBaseReadFull": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentRead"
+            },
+            "type": "array",
+            "title": "Documents",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "KnowledgeBaseReadFull"
+      },
+      "LLMModelRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome del modello LLM"
+          },
+          "api_model_name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Api Model Name",
+            "description": "Nome del deployment"
+          },
+          "provider": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Provider",
+            "description": "Nome del provider"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "api_model_name",
+          "provider",
+          "id"
+        ],
+        "title": "LLMModelRead"
+      },
+      "MessageType": {
+        "type": "string",
+        "enum": [
+          "human",
+          "ai"
+        ],
+        "title": "MessageType"
+      },
+      "ProcessingStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "processing",
+          "completed",
+          "failed"
+        ],
+        "title": "ProcessingStatus"
+      },
+      "PromptCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome del prompt"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Descrizione del prompt"
+          },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "description": "Contenuto del system prompt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "system_prompt"
+        ],
+        "title": "PromptCreate"
+      },
+      "PromptRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome del prompt"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Descrizione del prompt"
+          },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "description": "Contenuto del system prompt"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "system_prompt",
+          "id"
+        ],
+        "title": "PromptRead"
+      },
+      "TeamCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome del team"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Descrizione del team"
+          },
+          "supervisor_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Supervisor Id",
+            "description": "ID dell'agente supervisor"
+          },
+          "worker_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Worker Ids",
+            "description": "Lista degli ID dei worker"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "supervisor_id"
+        ],
+        "title": "TeamCreate"
+      },
+      "TeamRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome del team"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Descrizione del team"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id"
+        ],
+        "title": "TeamRead"
+      },
+      "TeamReadFull": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Nome del team"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Descrizione del team"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "supervisor": {
+            "$ref": "#/components/schemas/AgentRead"
+          },
+          "workers": {
+            "items": {
+              "$ref": "#/components/schemas/AgentRead"
+            },
+            "type": "array",
+            "title": "Workers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "supervisor",
+          "workers"
+        ],
+        "title": "TeamReadFull"
+      },
+      "ToolRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "display_name"
+        ],
+        "title": "ToolRead"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

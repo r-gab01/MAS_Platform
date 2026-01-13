@@ -13,5 +13,18 @@ services:
     volumes:
       - pgdatabase_volume:/var/lib/postgresql
 
+  app:
+    container_name: aop-platform-app
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+    env_file:
+      - ./app/.env  # Carica le variabili d'ambiente da .env (se esiste)
+    restart: unless-stopped
+
 volumes:
   pgdatabase_volume:

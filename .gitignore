@@ -6,3 +6,5 @@ __pycache__/
 *.pyo
 *.py[cod]
 .http
+frontend/node_modules
+mockup
