@@ -26,22 +26,69 @@ export default function ChatArea() {
     threadId || '',
     teamId
   );
+  const [hasSentInitialMessage, setHasSentInitialMessage] = useState(false);
+  const [hasLoadedInitialMessages, setHasLoadedInitialMessages] = useState(false);
 
-  // Load existing messages on mount
+  // Load existing messages on mount only
   useEffect(() => {
-    if (existingMessages && existingMessages.length > 0) {
-      setMessages(existingMessages);
-    }
-  }, [existingMessages, setMessages]);
+    if (!existingMessages || hasLoadedInitialMessages) return;
+    
+    // First load: just set the existing messages
+    setMessages(existingMessages);
+    setHasLoadedInitialMessages(true);
+  }, [existingMessages, setMessages, hasLoadedInitialMessages]);
 
-  // Send initial message if provided
+  // Remove duplicate HUMAN messages when DB refetches, but preserve all AI messages
+  // This prevents showing duplicate user messages while keeping streaming AI responses
+  // Skip merge during streaming to avoid interfering with AI message updates
   useEffect(() => {
-    if (location.state?.initialMessage && teamId && threadId) {
+    if (!existingMessages || !hasLoadedInitialMessages || isStreaming) return;
+    
+    setMessages((currentMessages) => {
+      // If we have no local messages, just use existing ones
+      if (currentMessages.length === 0) {
+        return existingMessages;
+      }
+      
+      // Create a set of existing HUMAN message content for deduplication
+      const existingHumanContent = new Set<string>();
+      existingMessages.forEach(msg => {
+        if (msg.type === 'human') {
+          existingHumanContent.add(msg.content.trim());
+        }
+      });
+      
+      // Remove duplicate HUMAN messages from local state
+      // Keep ALL AI messages (they might be streaming or have different content)
+      const filteredLocalMessages = currentMessages.filter(msg => {
+        if (msg.type === 'ai') {
+          // Always keep AI messages - never remove them
+          return true;
+        }
+        // For human messages, check if it's a duplicate
+        // If the same content exists in DB, remove the local one
+        return !existingHumanContent.has(msg.content.trim());
+      });
+      
+      // Merge: existing messages from DB + filtered local messages (only non-duplicate HUMAN + all AI)
+      // Sort by created_at to maintain chronological order
+      const merged = [...existingMessages, ...filteredLocalMessages].sort((a, b) => 
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      
+      return merged;
+    });
+  }, [existingMessages, setMessages, hasLoadedInitialMessages, isStreaming]);
+
+  // Send initial message if provided (only once)
+  useEffect(() => {
+    if (location.state?.initialMessage && teamId && threadId && !hasSentInitialMessage) {
+      setHasSentInitialMessage(true);
       sendMessage(location.state.initialMessage);
       // Clear the state to avoid resending
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, teamId, threadId, sendMessage, navigate]);
+  }, [location.state, teamId, threadId, sendMessage, navigate, hasSentInitialMessage]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -57,7 +104,8 @@ export default function ChatArea() {
     await sendMessage(message);
   };
 
-  const allMessages = messages.length > 0 ? messages : existingMessages || [];
+  // Use messages from useStreamingChat which handles both local and loaded messages
+  const allMessages = messages;
 
   if (!threadId) {
     return (
