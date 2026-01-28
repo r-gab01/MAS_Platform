@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useTeams, useCreateTeam, useUpdateTeam, useDeleteTeam } from '../services/teams';
+import { useTeams, useCreateTeam, useUpdateTeam, useDeleteTeam, useTeam } from '../services/teams';
 import { useAgents } from '../services/agents';
+import { apiClient } from '../services/api';
 import Header from '../components/Layout/Header';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
@@ -8,7 +9,7 @@ import Input from '../components/common/Input';
 import Textarea from '../components/common/Textarea';
 import Select from '../components/common/Select';
 import MultiSelect from '../components/common/MultiSelect';
-import type { TeamCreate } from '../types/api';
+import type { TeamCreate, TeamReadFull } from '../types/api';
 
 export default function TeamsLibrary() {
   const { data: teams, isLoading } = useTeams();
@@ -18,6 +19,8 @@ export default function TeamsLibrary() {
   const deleteTeam = useDeleteTeam();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingTeamId, setViewingTeamId] = useState<number | null>(null);
   const [editingTeam, setEditingTeam] = useState<number | null>(null);
   const [formData, setFormData] = useState<TeamCreate>({
     name: '',
@@ -26,20 +29,35 @@ export default function TeamsLibrary() {
     worker_ids: [],
   });
 
+  const { data: viewingTeam } = useTeam(viewingTeamId || 0);
+
   const supervisorAgents = agents?.filter((a) => a.agent_type === 'supervisor') || [];
   const workerAgents = agents?.filter((a) => a.agent_type === 'worker') || [];
 
-  const handleOpenModal = (teamId?: number) => {
+  const handleOpenModal = async (teamId?: number) => {
     if (teamId) {
       const team = teams?.find((t) => t.id === teamId);
       if (team) {
         setEditingTeam(teamId);
-        setFormData({
-          name: team.name,
-          description: team.description || '',
-          supervisor_id: 0, // Will be loaded from full team data
-          worker_ids: [],
-        });
+        // Fetch full team data to get supervisor_id and worker_ids
+        try {
+          const { data: fullTeam } = await apiClient.get<TeamReadFull>(`/api/v1/control/teams/${teamId}`);
+          setFormData({
+            name: team.name,
+            description: team.description || '',
+            supervisor_id: fullTeam.supervisor.id,
+            worker_ids: fullTeam.workers?.map((w) => w.id) || [],
+          });
+        } catch (error) {
+          console.error('Error fetching full team data:', error);
+          // Fallback to basic team data if fetch fails
+          setFormData({
+            name: team.name,
+            description: team.description || '',
+            supervisor_id: 0,
+            worker_ids: [],
+          });
+        }
       }
     } else {
       setEditingTeam(null);
@@ -51,6 +69,16 @@ export default function TeamsLibrary() {
       });
     }
     setIsModalOpen(true);
+  };
+
+  const handleOpenViewModal = (teamId: number) => {
+    setViewingTeamId(teamId);
+    setIsViewModalOpen(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewingTeamId(null);
   };
 
   const handleCloseModal = () => {
@@ -120,6 +148,9 @@ export default function TeamsLibrary() {
                 <p className="mt-2 text-sm text-gray-600">{team.description}</p>
               )}
               <div className="mt-4 flex gap-2">
+                <Button size="sm" variant="secondary" onClick={() => handleOpenViewModal(team.id)}>
+                  View
+                </Button>
                 <Button size="sm" variant="secondary" onClick={() => handleOpenModal(team.id)}>
                   Edit
                 </Button>
@@ -185,6 +216,58 @@ export default function TeamsLibrary() {
             placeholder="Select worker agents"
           />
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
+        title="Team Details"
+        footer={
+          <Button variant="ghost" onClick={handleCloseViewModal}>
+            Close
+          </Button>
+        }
+      >
+        {viewingTeam ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <p className="text-gray-900">{viewingTeam.name}</p>
+            </div>
+            {viewingTeam.description && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <p className="text-gray-900">{viewingTeam.description}</p>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Supervisor</label>
+              <div className="mt-1 p-3 bg-gray-50 rounded-lg">
+                <p className="font-semibold text-gray-900">{viewingTeam.supervisor.name}</p>
+                <p className="text-sm text-gray-600 mt-1">{viewingTeam.supervisor.description}</p>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Workers ({viewingTeam.workers?.length || 0})
+              </label>
+              {viewingTeam.workers && viewingTeam.workers.length > 0 ? (
+                <div className="mt-1 space-y-2">
+                  {viewingTeam.workers.map((worker) => (
+                    <div key={worker.id} className="p-3 bg-gray-50 rounded-lg">
+                      <p className="font-semibold text-gray-900">{worker.name}</p>
+                      <p className="text-sm text-gray-600 mt-1">{worker.description}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No workers assigned to this team.</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-4">Loading team details...</div>
+        )}
       </Modal>
     </div>
   );

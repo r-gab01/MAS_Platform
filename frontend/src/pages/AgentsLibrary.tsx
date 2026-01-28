@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAgents, useCreateAgent, useUpdateAgent, useDeleteAgent, useAgent } from '../services/agents';
 import { usePrompts } from '../services/prompts';
 import { useLLMModels } from '../services/llm';
 import { useTools } from '../services/tools';
 import { useKnowledgeBases } from '../services/kb';
+import { apiClient } from '../services/api';
 import Header from '../components/Layout/Header';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
@@ -11,7 +12,7 @@ import Input from '../components/common/Input';
 import Textarea from '../components/common/Textarea';
 import Select from '../components/common/Select';
 import MultiSelect from '../components/common/MultiSelect';
-import type { AgentCreate, AgentType } from '../types/api';
+import type { AgentCreate, AgentType, AgentReadFull } from '../types/api';
 
 export default function AgentsLibrary() {
   const { data: agents, isLoading } = useAgents();
@@ -37,25 +38,48 @@ export default function AgentsLibrary() {
     kb_ids: [],
   });
 
-  const handleOpenModal = (agentId?: number) => {
+  const handleOpenModal = async (agentId?: number) => {
     if (agentId) {
       const agent = agents?.find((a) => a.id === agentId);
       if (agent) {
         setEditingAgent(agentId);
-        setFormData({
-          name: agent.name,
-          description: agent.description,
-          prompt_id: agent.prompt_id,
-          llm_model_id: agent.llm_model_id,
-          temperature: agent.temperature,
-          agent_type: agent.agent_type,
-          tool_ids: [],
-          kb_ids: [],
-        });
+        console.log('Opening modal for editing agent:', agentId, '| Agent data:', agent);
+        // Fetch full agent data to get tools and knowledge bases
+        try {
+          const { data: fullAgent } = await apiClient.get<AgentReadFull>(`/api/v1/control/agents/${agentId}`);
+          const initialFormData = {
+            name: agent.name,
+            description: agent.description,
+            prompt_id: agent.prompt_id,
+            llm_model_id: agent.llm_model_id,
+            temperature: agent.temperature,
+            agent_type: agent.agent_type as AgentType,
+            tool_ids: fullAgent.tools?.map((t) => t.id) || [],
+            kb_ids: fullAgent.knowledge_bases?.map((kb) => kb.id).filter((id): id is string => id !== null) || [],
+          };
+          console.log('Setting form data (edit mode):', initialFormData);
+          setFormData(initialFormData);
+        } catch (error) {
+          console.error('Error fetching full agent data:', error);
+          // Fallback to basic agent data if fetch fails
+          const fallbackFormData = {
+            name: agent.name,
+            description: agent.description,
+            prompt_id: agent.prompt_id,
+            llm_model_id: agent.llm_model_id,
+            temperature: agent.temperature,
+            agent_type: agent.agent_type as AgentType,
+            tool_ids: [],
+            kb_ids: [],
+          };
+          console.log('Setting form data (fallback):', fallbackFormData);
+          setFormData(fallbackFormData);
+        }
       }
     } else {
+      console.log('Opening modal for creating new agent');
       setEditingAgent(null);
-      setFormData({
+      const newFormData: AgentCreate = {
         name: '',
         description: '',
         prompt_id: null,
@@ -64,7 +88,9 @@ export default function AgentsLibrary() {
         agent_type: 'worker',
         tool_ids: [],
         kb_ids: [],
-      });
+      };
+      console.log('Setting form data (create mode):', newFormData);
+      setFormData(newFormData);
     }
     setIsModalOpen(true);
   };
@@ -75,6 +101,21 @@ export default function AgentsLibrary() {
     setViewingAgent(null);
   };
 
+  // Auto-select first LLM model when creating a new agent
+  useEffect(() => {
+    if (isModalOpen && !editingAgent && !viewingAgent && llmModels && llmModels.length > 0) {
+      // Only set if llm_model_id is 0 or invalid
+      setFormData((prev) => {
+        if (!prev.llm_model_id || prev.llm_model_id <= 0) {
+          const firstModelId = llmModels[0].id;
+          console.log('Auto-selecting first LLM model:', firstModelId);
+          return { ...prev, llm_model_id: firstModelId };
+        }
+        return prev;
+      });
+    }
+  }, [isModalOpen, editingAgent, viewingAgent, llmModels]);
+
   const handleViewAgent = (id: number) => {
     setViewingAgent(id);
     setIsModalOpen(true);
@@ -82,8 +123,34 @@ export default function AgentsLibrary() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.description || !formData.llm_model_id) {
-      alert('Please fill in all required fields');
+    
+    // Debug: log all form data
+    console.log('=== Form Validation Debug ===');
+    console.log('Form Data:', formData);
+    console.log('name:', formData.name, '| Valid:', !!formData.name);
+    console.log('description:', formData.description, '| Valid:', !!formData.description);
+    console.log('llm_model_id:', formData.llm_model_id, '| Type:', typeof formData.llm_model_id, '| Valid:', !!(formData.llm_model_id && formData.llm_model_id > 0));
+    console.log('agent_type:', formData.agent_type);
+    console.log('temperature:', formData.temperature);
+    console.log('prompt_id:', formData.prompt_id);
+    console.log('tool_ids:', formData.tool_ids);
+    console.log('kb_ids:', formData.kb_ids);
+    
+    // Check each field individually
+    const errors: string[] = [];
+    if (!formData.name || formData.name.trim() === '') {
+      errors.push('Name is required');
+    }
+    if (!formData.description || formData.description.trim() === '') {
+      errors.push('Description is required');
+    }
+    if (!formData.llm_model_id || formData.llm_model_id <= 0) {
+      errors.push(`LLM Model is required (current value: ${formData.llm_model_id})`);
+    }
+    
+    if (errors.length > 0) {
+      console.error('Validation errors:', errors);
+      alert(`Please fill in all required fields:\n${errors.join('\n')}`);
       return;
     }
 
@@ -237,16 +304,36 @@ export default function AgentsLibrary() {
             </div>
             <Select
               label="LLM Model *"
-              value={formData.llm_model_id}
-              onChange={(e) => setFormData({ ...formData, llm_model_id: parseInt(e.target.value) })}
-              options={llmModels?.map((m) => ({ value: m.id, label: `${m.name} (${m.provider})` })) || []}
-              placeholder="Select an LLM model"
+              value={formData.llm_model_id > 0 ? String(formData.llm_model_id) : ''}
+              onChange={(e) => {
+                const selectedValue = e.target.value;
+                console.log('LLM Model onChange - raw value:', selectedValue, '| type:', typeof selectedValue);
+                
+                if (selectedValue && selectedValue !== '') {
+                  const parsedValue = parseInt(selectedValue, 10);
+                  console.log('LLM Model onChange - parsed value:', parsedValue, '| isNaN:', isNaN(parsedValue));
+                  
+                  if (!isNaN(parsedValue) && parsedValue > 0) {
+                    console.log('LLM Model onChange - updating formData with:', parsedValue);
+                    setFormData((prev) => {
+                      const updated = { ...prev, llm_model_id: parsedValue };
+                      console.log('LLM Model onChange - new formData:', updated);
+                      return updated;
+                    });
+                  } else {
+                    console.error('LLM Model onChange - invalid parsed value:', parsedValue);
+                  }
+                } else {
+                  console.warn('LLM Model onChange - empty value selected');
+                }
+              }}
+              options={llmModels?.map((m) => ({ value: String(m.id), label: `${m.name} (${m.provider})` })) || []}
               required
             />
             <Select
               label="Prompt (Optional)"
-              value={formData.prompt_id || ''}
-              onChange={(e) => setFormData({ ...formData, prompt_id: e.target.value ? parseInt(e.target.value) : null })}
+              value={formData.prompt_id ? String(formData.prompt_id) : ''}
+              onChange={(e) => setFormData({ ...formData, prompt_id: e.target.value ? parseInt(e.target.value, 10) : null })}
               options={[
                 { value: '', label: 'None' },
                 ...(prompts?.map((p) => ({ value: p.id, label: p.name })) || []),
@@ -261,7 +348,7 @@ export default function AgentsLibrary() {
             />
             <MultiSelect
               label="Knowledge Bases"
-              selected={formData.kb_ids || []}
+              selected={(formData.kb_ids || []).filter((id) => id !== null) as (string | number)[]}
               onChange={(selected) => setFormData({ ...formData, kb_ids: selected as (string | null)[] })}
               options={knowledgeBases?.map((kb) => ({ value: kb.id, label: kb.name })) || []}
               placeholder="Select knowledge bases"

@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Teams', href: '/teams', icon: '👥' },
-  { name: 'Agents', href: '/agents', icon: '🤖' },
-  { name: 'Prompts', href: '/prompts', icon: '📝' },
-  { name: 'Knowledge Bases', href: '/kb', icon: '📚' },
+    { name: 'Knowledge Bases', href: '/kb', icon: '📚' },
+    { name: 'Prompts', href: '/prompts', icon: '📝' },
+    { name: 'Agents', href: '/agents', icon: '🤖' },
+    { name: 'Teams', href: '/teams', icon: '👥' },
   { name: 'New Chat', href: '/chat/new', icon: '💬' },
 ];
 
