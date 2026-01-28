@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { useTeams } from '../services/teams';
 import Header from '../components/Layout/Header';
 import Button from '../components/common/Button';
-import Input from '../components/common/Input';
 import Textarea from '../components/common/Textarea';
 import Select from '../components/common/Select';
 
@@ -14,8 +13,15 @@ export default function NewChat() {
   const [teamId, setTeamId] = useState<number>(0);
   const [message, setMessage] = useState('');
 
+  // Auto-select first team when teams are loaded
+  useEffect(() => {
+    if (teams && teams.length > 0 && teamId === 0) {
+      setTeamId(teams[0].id);
+    }
+  }, [teams, teamId]);
+
   const handleStartChat = () => {
-    if (!teamId || !message.trim()) {
+    if (teamId === 0 || !message.trim()) {
       alert('Please select a team and enter a message');
       return;
     }
@@ -59,7 +65,7 @@ export default function NewChat() {
                 required
               />
               <div className="flex justify-end">
-                <Button onClick={handleStartChat} disabled={!teamId || !message.trim()}>
+                <Button onClick={handleStartChat} disabled={teamId === 0 || !message.trim()}>
                   Start Chat
                 </Button>
               </div>
