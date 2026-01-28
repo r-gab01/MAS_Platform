@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from app.shared.persistence.models import ChatThreadModel
 import uuid
@@ -101,25 +102,29 @@ class ThreadService:
                 # tramite astream generiamo flusso di eventi per ogni modifica nello stato del Grafo (fra cui la risposta man mano prodotta dall'agente)
                 async for event in graph.astream(inputs, config=config, stream_mode="values"):
                     if "messages" in event:
-                        last_msg = event["messages"][-1]
+                        last_msg = event["messages"][-1]    # Ultimo messaggio contiene il nuovo contenuto generato nel nodo
 
-
-                        # Se è un messaggio AI, lo mandiamo al frontend
+                        # Prepariamo un payload strutturato
+                        payload = {
+                            "type": last_msg.type,
+                            "content": last_msg.content,
+                        }
                         if last_msg.type == "ai":
-                            final_message_to_save = last_msg  # Aggiorniamo il buffer
+                            final_message_to_save = last_msg
 
-                            last_msg.pretty_print() # DEBUG IN CONSOLE
+                        # Se è un messaggio AI, includiamo eventuali chiamate ai tool
+                        if last_msg.type == "ai" and last_msg.tool_calls:
+                            payload["tool_calls"] = last_msg.tool_calls
 
-                            # Formattazione per SSE
-                            raw_content = last_msg.content
-                            if isinstance(raw_content, list):
-                                content = "".join(str(item) for item in raw_content)
-                            else:
-                                content = str(raw_content)
+                        # Se è un messaggio Tool, includiamo il nome del tool che ha risposto
+                        if last_msg.type == "tool":
+                            payload["name"] = last_msg.name
+                            payload["tool_call_id"] = last_msg.tool_call_id
 
-                            clean_content = content.replace("\n", "\\n")
-                            if clean_content:
-                                yield f"data: {clean_content}\n\n"       # formato Server-Sent Events (SSE)
+                        # Invio via SSE (serializzato in JSON)
+                        # Sostituiamo i newline per non rompere il protocollo SSE
+                        json_data = json.dumps(payload)
+                        yield f"data: {json_data}\n\n"       # formato Server-Sent Events (SSE)
 
             except Exception as e:
                 print(f" Errore durante streaming: {e}")
