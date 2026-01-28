@@ -128,6 +128,17 @@ export interface TeamReadFull {
   workers: AgentRead[];
 }
 
+// Validation Errors
+export interface ValidationError {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+}
+
+export interface HTTPValidationError {
+  detail: ValidationError[];
+}
+
 // Chat Threads
 export interface ChatThreadRead {
   thread_id: string;
@@ -146,16 +157,5 @@ export interface ChatMessageRead {
 export interface ChatRequest {
   message: string;
   team_id: number;
-}
-
-// Validation Errors
-export interface ValidationError {
-  loc: (string | number)[];
-  msg: string;
-  type: string;
-}
-
-export interface HTTPValidationError {
-  detail: ValidationError[];
 }
 

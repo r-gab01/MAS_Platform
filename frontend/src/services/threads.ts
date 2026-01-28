@@ -23,10 +23,11 @@ export const useThreads = () => {
 };
 
 // Get messages for a thread
-export const useThreadMessages = (threadId: string) => {
+export const useThreadMessages = (threadId: string | undefined) => {
   return useQuery({
-    queryKey: threadKeys.messages(threadId),
+    queryKey: threadKeys.messages(threadId || ''),
     queryFn: async () => {
+      if (!threadId) return [];
       const { data } = await apiClient.get<ChatMessageRead[]>(
         `/api/v1/execution/threads/${threadId}/messages`
       );
@@ -36,10 +37,85 @@ export const useThreadMessages = (threadId: string) => {
   });
 };
 
+// Send message with streaming
+export const useSendMessage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      threadId,
+      request,
+      onChunk,
+    }: {
+      threadId: string;
+      request: ChatRequest;
+      onChunk?: (content: string, type: string) => void;
+    }) => {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/api/v1/execution/threads/${threadId}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      // Handle streaming response (Server-Sent Events)
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullContent = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Parse SSE format: "data: {...}\n\n"
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const jsonStr = line.slice(6); // Remove "data: " prefix
+                const data = JSON.parse(jsonStr);
+                
+                // Extract content from AI messages
+                if (data.type === 'ai' && data.content) {
+                  fullContent = data.content;
+                  if (onChunk) {
+                    onChunk(data.content, data.type);
+                  }
+                }
+              } catch (e) {
+                console.error('Error parsing SSE data:', e, line);
+              }
+            }
+          }
+        }
+      }
+
+      // Invalidate messages query to refresh the list
+      queryClient.invalidateQueries({ queryKey: threadKeys.messages(threadId) });
+      queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+
+      return fullContent;
+    },
+  });
+};
+
 // Delete thread
 export const useDeleteThread = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (threadId: string) => {
       await apiClient.delete(`/api/v1/execution/threads/${threadId}`);
@@ -47,17 +123,6 @@ export const useDeleteThread = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
     },
-  });
-};
-
-// Send chat message (streaming handled separately)
-export const sendChatMessage = async (threadId: string, request: ChatRequest): Promise<Response> => {
-  return fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/v1/execution/threads/${threadId}/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
   });
 };
 

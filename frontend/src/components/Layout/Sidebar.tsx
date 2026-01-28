@@ -5,7 +5,7 @@ const navigation = [
     { name: 'Prompts', href: '/prompts', icon: '📝' },
     { name: 'Agents', href: '/agents', icon: '🤖' },
     { name: 'Teams', href: '/teams', icon: '👥' },
-  { name: 'New Chat', href: '/chat/new', icon: '💬' },
+    { name: 'Chat', href: '/chat', icon: '💬' },
 ];
 
 export default function Sidebar() {

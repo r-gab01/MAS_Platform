@@ -4,8 +4,7 @@ import TeamsLibrary from './pages/TeamsLibrary';
 import AgentsLibrary from './pages/AgentsLibrary';
 import PromptsLibrary from './pages/PromptsLibrary';
 import KBLibrary from './pages/KBLibrary';
-import NewChat from './pages/NewChat';
-import ChatArea from './pages/ChatArea';
+import Chat from './pages/Chat';
 
 function App() {
   return (
@@ -17,8 +16,7 @@ function App() {
           <Route path="agents" element={<AgentsLibrary />} />
           <Route path="prompts" element={<PromptsLibrary />} />
           <Route path="kb" element={<KBLibrary />} />
-          <Route path="chat/new" element={<NewChat />} />
-          <Route path="chat/:threadId" element={<ChatArea />} />
+          <Route path="chat/:threadId?" element={<Chat />} />
         </Route>
       </Routes>
     </BrowserRouter>
