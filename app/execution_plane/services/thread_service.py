@@ -109,12 +109,12 @@ class ThreadService:
                             "type": last_msg.type,
                             "content": last_msg.content,
                         }
-                        if last_msg.type == "ai":
-                            final_message_to_save = last_msg
 
-                        # Se è un messaggio AI, includiamo eventuali chiamate ai tool
-                        if last_msg.type == "ai" and last_msg.tool_calls:
-                            payload["tool_calls"] = last_msg.tool_calls
+                        if last_msg.type == "ai":
+                            if not last_msg.tool_calls:  # Nessuna chiamata a tool = risposta finale
+                                final_message_to_save = last_msg
+                            else:
+                                payload["tool_calls"] = last_msg.tool_calls # se ci sono chiamate ai tool le mostro
 
                         # Se è un messaggio Tool, includiamo il nome del tool che ha risposto
                         if last_msg.type == "tool":
