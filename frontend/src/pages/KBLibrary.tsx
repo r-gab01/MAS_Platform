@@ -75,7 +75,7 @@ export default function KBLibrary() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name) {
+    if (!formData.name || !formData.description || formData.description.trim() === '') {
       alert('Please fill in all required fields');
       return;
     }
@@ -209,10 +209,12 @@ export default function KBLibrary() {
               maxLength={50}
             />
             <Textarea
-              label="Description"
+              label="Description *"
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
+              required
+              minLength={3}
             />
           </form>
         )}
