@@ -115,5 +115,8 @@ def delete_agent(db: Session, agent_id: int) -> None:
     db_agent = agent_db.get_agent_by_id(db, agent_id)
     if db_agent is None:
         raise ValueError(f"Agente con id='{agent_id}' non trovato")
+
+    if len(db_agent.managed_teams) > 0:
+        raise ValueError(f"L'agente selezionato è impiegato come Supervisor in un Team")
     agent_db.delete_agent(db=db, db_agent=db_agent)
     return

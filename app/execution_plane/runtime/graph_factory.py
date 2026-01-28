@@ -38,7 +38,7 @@ def _create_worker_as_tool(worker: AgentModel):
     # Creazione tool per RAG con KnowledgeBases
     for kb in worker.knowledge_bases:
         try:
-            kb_tool_instance = toolFactory.create_rag_tool(kb.id)
+            kb_tool_instance = toolFactory.create_rag_tool(kb.id, kb.description)
             worker_tools.append(kb_tool_instance)
         except ValueError as e:
             print(f"Errore creazione kb {kb.id}: {e}")

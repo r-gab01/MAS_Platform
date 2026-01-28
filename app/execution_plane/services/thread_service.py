@@ -103,6 +103,7 @@ class ThreadService:
                     if "messages" in event:
                         last_msg = event["messages"][-1]
 
+
                         # Se è un messaggio AI, lo mandiamo al frontend
                         if last_msg.type == "ai":
                             final_message_to_save = last_msg  # Aggiorniamo il buffer
