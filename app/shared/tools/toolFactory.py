@@ -1,10 +1,9 @@
 import uuid
 
-from langchain_community.tools import TavilySearchResults
+
 from langchain_core.tools import tool
 # WebSearch
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_community.tools import DuckDuckGoSearchRun
 
 from app.shared.factories.vector_store_factory import VectorStoreFactory
 from app.shared.security.credential_manager import credential_manager
@@ -43,8 +42,10 @@ def create_tool(tool_type: str):
             tavily_api_key=tavily_key
         )
 
-    # elif tool_type == "nometool":
-        #pass
+    #elif tool_type == "send_email":
+    #    credentials = credential_manager.get_email_credentials()
+    #    return create_send_email_tool(credentials)
+
     else:
         raise ValueError(f"Tool '{tool_type}' non supportato dalla factory.")
 
@@ -69,3 +70,38 @@ def create_rag_tool(kb_id: uuid.UUID, knowledge_descr: str):
         return serialized, retrieved_docs
     return retrieve_context
 
+
+def create_send_email_tool(credentials):
+
+    @tool
+    def send_email_tool(recipient: str, subject: str, body: str) -> str:
+        """
+        Utilizza questo tool per inviare una email a un destinatario specifico.
+        NON chiedere conferma all'utente prima di usare questo tool, eseguilo direttamente se hai i dati.
+
+        Args:
+            recipient (str): L'indirizzo email del destinatario (es. "mario.rossi@example.com").
+            subject (str): L'oggetto dell'email. Sii conciso e professionale.
+            body (str): Il corpo del messaggio. Può contenere testo formattato.
+
+        Returns:
+            str: Un messaggio di conferma o di errore.
+        """
+
+        # ---------------------------------------------------------
+        # MODALITÀ DEMO / MOCK (Consigliata per la Tesi)
+        # ---------------------------------------------------------
+        # Se la variabile d'ambiente MOCK_EMAIL è True, fingiamo l'invio.
+
+        print(f"\n[MOCK EMAIL SYSTEM] -------------------------")
+        print(f"TO: {recipient}")
+        print(f"SUBJECT: {subject}")
+        print(f"BODY:\n{body}")
+        print(f"-----------------------------------------------\n")
+
+        # Simuliamo anche il salvataggio in un log per "tracciabilità"
+        with open("email_logs.txt", "a") as f:
+            f.write(f"TO: {recipient} | SUB: {subject} | STATUS: SENT\n")
+
+        return f"Email inviata con successo a {recipient} (Modalità Simulazione)."
+    return send_email_tool

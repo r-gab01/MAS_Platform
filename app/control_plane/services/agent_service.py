@@ -82,20 +82,15 @@ def update_agent(db: Session, agent_id: int, agent_data: AgentCreate) -> AgentMo
 
 
     # Controllo tools esistenti
-    # Se tool_ids è presente (anche se lista vuota), filtra i tools
-    # Se tool_ids è una lista vuota, filtered_tools sarà una lista vuota (rimuove tutti i tools)
-    filtered_tools = []
+    filtered_tools = None
     if agent_data.tool_ids:
         filtered_tools = tool_db.filter_tools(db, agent_data.tool_ids)
 
     # Controllo Knowledge Base
-    # Se kb_ids è presente (anche se lista vuota), filtra le KB
-    # Se kb_ids è una lista vuota, filtered_kbs sarà una lista vuota (rimuove tutte le KB)
-    # Se kb_ids è None, filtered_kbs rimane None (non aggiorna le KB)
     filtered_kbs = None
-    if agent_data.kb_ids is not None:
+    if agent_data.kb_ids:
         print(f"KB_IDS ricevuti: {agent_data.kb_ids}")
-        filtered_kbs = kb_db.filter_kbs(db, agent_data.kb_ids) if agent_data.kb_ids else []
+        filtered_kbs = kb_db.filter_kbs(db, agent_data.kb_ids)
         print(f"KB filtrate: {len(filtered_kbs)}")
 
     print(f"Servizio: Aggiorno l'agente con id='{agent_id}' e nome='{agent_data.name}'...")

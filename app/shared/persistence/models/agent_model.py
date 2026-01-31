@@ -83,7 +83,7 @@ class AgentModel(Base):
         back_populates="workers"
     )
 
-    # Relationship per i tool che questo agent usa (one to many)
+    # Relationship per i tool usati dall'agente (one to many: un agente ha più tool)
     tools: Mapped[List["ToolModel"]] = relationship(
         "ToolModel",
         secondary="agent_tools",

@@ -81,14 +81,10 @@ def update_agent(db: Session, agent_schema: AgentCreate, agent_id: int, tools: l
         setattr(db_agent, key, value)
 
     # 3. Assegna tool e KBs
-    # Se tools è una lista (anche vuota), aggiorna sempre
-    # Se tools è None, non aggiorna (mantiene quelle esistenti)
-    if tools is not None:
+    if tools:
         db_agent.tools = tools
 
-    # Se kbs è una lista (anche vuota), aggiorna sempre
-    # Se kbs è None, non aggiorna (mantiene quelle esistenti)
-    if kbs is not None:
+    if kbs:
         db_agent.knowledge_bases = kbs
 
     # 4. Commit e refresh
