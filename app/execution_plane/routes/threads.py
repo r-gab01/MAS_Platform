@@ -20,7 +20,6 @@ class ChatRequest(BaseModel):
 
 
 
-
 @router.post("/{thread_id}/chat")
 async def chat_with_thread(
         thread_id: str,
@@ -28,20 +27,11 @@ async def chat_with_thread(
         db: Session = Depends(get_db)
 ):
     """
-    Endpoint Chat Stream.
-    Delega tutta la logica al ThreadService.
+        Endpoint Chat Stream.
+        Delega tutta la logica al ThreadService.
     """
 
-    # PASSO 1: VALIDAZIONE ASINCRONA (PREPARIAMO IL TEAM E LA CHAT DAL DB)
-    await ThreadService.prepare_chat(
-        db=db,
-        team_id=payload.team_id,
-        thread_id=thread_id,
-        message=payload.message
-    )
-
-    # PASSO 2: STREAMING SINCRONO
-    stream_generator = ThreadService.run_chat_stream(
+    stream_generator = ThreadService.chat_stream_workflow(
         db=db,
         team_id=payload.team_id,
         thread_id=thread_id,
@@ -51,8 +41,9 @@ async def chat_with_thread(
     return StreamingResponse(stream_generator, media_type="text/event-stream")
 
 
+
 @router.get("", response_model=list[ChatThreadRead])
-async def read_all_threads(db: Session = Depends(get_db)):
+def read_all_threads(db: Session = Depends(get_db)):
     """
     Ottiene la lista di tutte le chat avviate dall'utente
     """

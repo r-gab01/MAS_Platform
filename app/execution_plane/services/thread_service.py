@@ -7,7 +7,6 @@ import re
 import asyncio
 from typing import AsyncGenerator
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
 
 # I tuoi import
 from app.shared.factories.checkpointer_factory import CheckpointFactory
@@ -29,12 +28,81 @@ def clean_langchain_id(dirty_id: str) -> uuid.UUID:
 class ThreadService:
 
     @staticmethod
-    async def prepare_chat(db: Session, team_id: int, thread_id: str, message: str):
-        """wrapper asincrono per la preparazione della chat. Se la preparazione chat fallisce possiamo bloccare tutto."""
-        await asyncio.to_thread(
-            ThreadService._prepare_conversation_sync,
-            db, team_id, thread_id, message
-        )
+    async def chat_stream_workflow(
+            db: Session,
+            team_id: int,
+            thread_id: str,
+            user_message: str
+    ) -> AsyncGenerator[str, None]:
+        """
+        Gestisce tutto il flusso: Preparazione -> Streaming -> Salvataggio
+        """
+
+        # 1. PREPARAZIONE
+        try:
+            # Funzione sincrona: prima di continuare serve sapere se i dati scelti siano validi
+            await asyncio.to_thread(    # Uso to_thread così l'esecuzione sincrona non blocca l'intero sistema, ma viene gestita in thread a parte: è sincrona solo per chi fa richiesta
+                ThreadService._prepare_conversation_sync,
+                db, team_id, thread_id, user_message
+            )
+        except ValueError as e:
+            # Convertiamo errori di business in messaggi per lo stream o errori HTTP
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            return
+
+        # 2. SETUP GRAFO
+        async with CheckpointFactory.get_checkpointer() as checkpointer:
+            try:
+                graph = await asyncio.to_thread(build_team_graph, db, team_id, checkpointer)
+            except Exception as e:
+                yield f"data: Error: {str(e)}\n\n"
+                return
+
+            config = {"configurable": {"thread_id": thread_id}}
+            inputs = {"messages": [("user", user_message)]}
+            final_message = None    # Variabile "buffer" per ricordare l'ultimo messaggio IA valido visto
+
+            # 3. STREAMING  (asincrono)
+            try:
+                async for event in graph.astream(inputs, config=config, stream_mode="values"):
+                    if "messages" in event:
+                        last_msg = event["messages"][-1]
+
+                        # Logica di business per filtrare cosa mandare al frontend
+                        payload = ThreadService._format_sse_payload(last_msg)
+                        if payload:
+                            yield f"data: {json.dumps(payload)}\n\n"
+
+                        # Salviamo riferimento per DB
+                        if last_msg.type == "ai" and not last_msg.tool_calls:
+                            final_message = last_msg
+
+            except asyncio.CancelledError:
+                # Opzionale: Loggare che l'utente ha chiuso la connessione
+                print(f"--- Utente disconnesso dal thread {thread_id} ---")
+                # Rilanciamo l'errore o lo gestiamo, ma il 'finally' partirà comunque.
+                raise
+
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+            # 4. SALVATAGGIO MESSAGGIO FINALE (sincrono)
+            finally:
+                if final_message:
+                    await asyncio.to_thread(ThreadService._save_ai_message_sync, db, thread_id, final_message)
+
+
+    @staticmethod
+    def _format_sse_payload(msg):
+        """Helper per pulire la logica di formattazione JSON"""
+        payload = {"type": msg.type, "content": msg.content}
+        if msg.type == "ai" and msg.tool_calls:
+            payload["tool_calls"] = msg.tool_calls
+        if msg.type == "tool":
+            payload["name"] = msg.name
+            payload["tool_call_id"] = msg.tool_call_id
+        return payload
+
 
 
     @staticmethod
@@ -43,7 +111,7 @@ class ThreadService:
         # 1. Check Team
         db_team = team_db.get_team_by_id(db=db, team_id=team_id)
         if not db_team:
-            raise HTTPException(status_code=404, detail=f"Team con id='{team_id}' non trovato.")
+            raise ValueError(f"Team {team_id} non trovato.")
 
         # 2. Upsert Thread
         db_thread = thread_db.get_thread(db=db, thread_id=thread_id)
@@ -65,88 +133,12 @@ class ThreadService:
 
 
     @staticmethod
-    async def run_chat_stream(
-            db: Session,
-            team_id: int,
-            thread_id: str,
-            user_message: str
-    ) -> AsyncGenerator[str, None]:
-        """
-        Orchestra l'intero flusso di chat:
-        1. Setup DB (Sync -> ThreadPool: thread separato per non bloccare FastApi)
-        2. Esecuzione Grafo (Async)
-        3. Salvataggio Risposta (Sync -> ThreadPool)
-        """
-
-        # --- FASE 2: ESECUZIONE GRAFO (ASYNC) ---
-        async with CheckpointFactory.get_checkpointer() as checkpointer:
-
-            # Costruzione grafo
-            try:
-                graph = await asyncio.to_thread(build_team_graph, db, team_id, checkpointer)
-            except Exception as e:
-                yield f"data: Error: {str(e)}\n\n"
-                return
-
-
-            config = {"configurable": {"thread_id": thread_id}}
-            inputs = {"messages": [("user", user_message)]}
-
-
-            # STREAM
-            print(f"--- START STREAM Thread {thread_id} ---")
-
-            final_message_to_save = None # Variabile "buffer" per ricordare l'ultimo messaggio AI valido visto
-
-            try:
-                # tramite astream generiamo flusso di eventi per ogni modifica nello stato del Grafo (fra cui la risposta man mano prodotta dall'agente)
-                async for event in graph.astream(inputs, config=config, stream_mode="values"):
-                    if "messages" in event:
-                        last_msg = event["messages"][-1]    # Ultimo messaggio contiene il nuovo contenuto generato nel nodo
-
-                        # Prepariamo un payload strutturato
-                        payload = {
-                            "type": last_msg.type,
-                            "content": last_msg.content,
-                        }
-
-                        if last_msg.type == "ai":
-                            if not last_msg.tool_calls:  # Nessuna chiamata a tool = risposta finale
-                                final_message_to_save = last_msg
-                            else:
-                                payload["tool_calls"] = last_msg.tool_calls # se ci sono chiamate ai tool le mostro
-
-                        # Se è un messaggio Tool, includiamo il nome del tool che ha risposto
-                        if last_msg.type == "tool":
-                            payload["name"] = last_msg.name
-                            payload["tool_call_id"] = last_msg.tool_call_id
-
-                        # Invio via SSE (serializzato in JSON)
-                        # Sostituiamo i newline per non rompere il protocollo SSE
-                        json_data = json.dumps(payload)
-                        yield f"data: {json_data}\n\n"       # formato Server-Sent Events (SSE)
-
-            except Exception as e:
-                print(f" Errore durante streaming: {e}")
-                yield f"data: Error: {str(e)}\n\n"
-
-            # --- FASE 3: SALVATAGGIO FINALE (SYNC OFF-LOAD) ---
-            if final_message_to_save:
-                await asyncio.to_thread(
-                    ThreadService._save_ai_message_sync,
-                    db, thread_id, final_message_to_save
-                )
-
-
-
-    @staticmethod
     def _save_ai_message_sync(db: Session, thread_id: str, ai_msg):
         """Salva il messaggio finale dell'AI."""
         content = ai_msg.content
         if isinstance(content, list):
             content = "".join(str(item) for item in content)
 
-        # Qui potresti avere la tua logica di clean_id
         lang_id = getattr(ai_msg, 'id', None)
         clean_id = clean_langchain_id(lang_id)
 
