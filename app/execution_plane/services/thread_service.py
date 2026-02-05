@@ -14,7 +14,7 @@ from app.shared.persistence import team_db, thread_db, message_db
 from app.shared.persistence.models.message_model import MessageType
 from app.shared.schemas.thread_schemas import ChatThreadCreate
 
-from app.execution_plane.runtime.graph_factory import build_team_graph
+from app.execution_plane.runtime.graph_factory import GraphFactory
 
 
 def clean_langchain_id(dirty_id: str) -> uuid.UUID:
@@ -53,7 +53,7 @@ class ThreadService:
         # 2. SETUP GRAFO
         async with CheckpointFactory.get_checkpointer() as checkpointer:
             try:
-                graph = await asyncio.to_thread(build_team_graph, db, team_id, checkpointer)
+                graph = await asyncio.to_thread(GraphFactory.build_team_graph, db, team_id, checkpointer)
             except Exception as e:
                 yield f"data: Error: {str(e)}\n\n"
                 return
@@ -71,6 +71,7 @@ class ThreadService:
                         # Logica di business per filtrare cosa mandare al frontend
                         payload = ThreadService._format_sse_payload(last_msg)
                         if payload:
+                            print(f"Payload: {payload}")
                             yield f"data: {json.dumps(payload)}\n\n"
 
                         # Salviamo riferimento per DB

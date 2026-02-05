@@ -49,7 +49,7 @@ export const useSendMessage = () => {
     }: {
       threadId: string;
       request: ChatRequest;
-      onChunk?: (content: string, type: string) => void;
+      onChunk?: (message: Partial<ChatMessageRead>) => void;
     }) => {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       const response = await fetch(`${API_BASE_URL}/api/v1/execution/threads/${threadId}/chat`, {
@@ -72,12 +72,12 @@ export const useSendMessage = () => {
       let fullContent = '';
 
       if (reader) {
-        while (true) {
+        while (true) { // eslint-disable-line no-constant-condition
           const { done, value } = await reader.read();
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-          
+
           // Parse SSE format: "data: {...}\n\n"
           const lines = buffer.split('\n');
           buffer = lines.pop() || ''; // Keep incomplete line in buffer
@@ -87,7 +87,7 @@ export const useSendMessage = () => {
               try {
                 const jsonStr = line.slice(6); // Remove "data: " prefix
                 const data = JSON.parse(jsonStr);
-                
+
                 // Extract content from AI messages
                 if (data.type === 'ai' && data.content) {
                   fullContent = data.content;

@@ -3,6 +3,7 @@ from langchain_openai import AzureChatOpenAI
 from langchain_aws import ChatBedrock, ChatBedrockConverse
 from app.shared.security.credential_manager import credential_manager
 
+from botocore.config import Config
 
 class LLMFactory:
     """
@@ -67,8 +68,18 @@ class LLMFactory:
                 region_name=creds["region_name"],
                 aws_access_key_id=creds["aws_access_key_id"],
                 aws_secret_access_key=creds["aws_secret_access_key"],
-                # model_kwargs={"temperature": temperature}  # Bedrock passa i param così
-                temperature=temperature
+                model_kwargs={
+                    "temperature": temperature,
+                    "max_tokens": 32000  # Sonnet 4.5 supporta fino a 64k in output
+                },
+                config=Config(
+                    read_timeout=600,  # 600 secondi = 10 minuti
+                    connect_timeout=10,
+                    retries={
+                        'max_attempts': 3,
+                        'mode': 'standard'
+                    }
+                )
             )
 
         else:

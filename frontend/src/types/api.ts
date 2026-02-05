@@ -1,6 +1,6 @@
 // Enums
 export type AgentType = 'supervisor' | 'worker';
-export type MessageType = 'human' | 'ai';
+export type MessageType = 'human' | 'ai' | 'tool';
 export type ProcessingStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 // LLM Models
@@ -147,11 +147,34 @@ export interface ChatThreadRead {
   updated_at: string;
 }
 
+export interface ToolCall {
+  name: string;
+  args: Record<string, any>;
+  id: string;
+}
+
+export interface TextBlock {
+  type: 'text';
+  text: string;
+}
+
+export interface ToolUseBlock {
+  type: 'tool_use';
+  name: string;
+  input: Record<string, any>;
+  id: string;
+}
+
+export type ContentBlock = TextBlock | ToolUseBlock;
+
 export interface ChatMessageRead {
   id: string; // UUID
   type: MessageType;
-  content: string;
-  created_at: string;
+  content: string | ContentBlock[];
+  created_at?: string;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+  name?: string;
 }
 
 export interface ChatRequest {
