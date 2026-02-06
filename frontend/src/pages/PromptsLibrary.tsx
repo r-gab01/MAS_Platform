@@ -106,7 +106,7 @@ export default function PromptsLibrary() {
             <div key={prompt.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900">{prompt.name}</h3>
               {prompt.description && (
-                <p className="mt-2 text-sm text-gray-600">{prompt.description}</p>
+                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{prompt.description}</p>
               )}
               <div className="mt-3">
                 <p className="text-xs text-gray-500 line-clamp-3">

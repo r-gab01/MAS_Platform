@@ -145,7 +145,7 @@ export default function TeamsLibrary() {
             <div key={team.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
               {team.description && (
-                <p className="mt-2 text-sm text-gray-600">{team.description}</p>
+                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{team.description}</p>
               )}
               <div className="mt-4 flex gap-2">
                 <Button size="sm" variant="secondary" onClick={() => handleOpenViewModal(team.id)}>

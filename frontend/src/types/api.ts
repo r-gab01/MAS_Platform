@@ -182,3 +182,5 @@ export interface ChatRequest {
   team_id: number;
 }
 
+
+export type StreamEventType = 'answer' | 'thought' | 'tool_output' | 'ai' | 'tool';

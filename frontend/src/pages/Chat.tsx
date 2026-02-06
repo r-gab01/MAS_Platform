@@ -24,15 +24,16 @@ export default function Chat() {
   const chatAreaRef = useRef<HTMLDivElement>(null);
   const streamingContentRef = useRef<string>('');
 
-  // Load existing messages when threadId changes
+  // Load existing messages when threadId changes, but don't overwrite optimistic updates while streaming
   useEffect(() => {
+    // Skip updates if streaming is active to preserve optimistic state
+    if (isStreaming) return;
+
     if (existingMessages) {
       setMessages(existingMessages);
-      // Clear streaming content when messages are refreshed (after streaming completes)
-      if (!isStreaming) {
-        setStreamingContent('');
-        streamingContentRef.current = '';
-      }
+      // Clear streaming content when messages are refreshed
+      setStreamingContent('');
+      streamingContentRef.current = '';
     } else {
       setMessages([]);
     }
@@ -95,11 +96,12 @@ export default function Chat() {
           message: messageText,
           team_id: selectedTeamId as number,
         },
-        onChunk: (chunk: Partial<ChatMessageRead>) => {
-          // Update streaming content in real-time
+        onChunk: (chunk: any) => {
+          const eventType = chunk.type;
 
-          // 1. Handle Tool Calls (The AI wants to call a tool)
-          if (chunk.type === 'ai' && chunk.tool_calls && chunk.tool_calls.length > 0) {
+          // 1. Tool Calls (AI requests execution of a tool)
+          // We immediately add this as a message
+          if (eventType === 'ai' && chunk.tool_calls && chunk.tool_calls.length > 0) {
             setMessages((prev) => [
               ...prev,
               {
@@ -110,12 +112,16 @@ export default function Chat() {
                 created_at: new Date().toISOString()
               } as ChatMessageRead
             ]);
+            // If there's content mixed with tool calls, we might want to capture it, 
+            // but usually content is empty or intro text. 
+            // If it's empty, we ensure streamingContent is clear for next text.
             setStreamingContent('');
             streamingContentRef.current = '';
           }
 
-          // 2. Handle Tool Outputs (The result of the tool)
-          else if (chunk.type === 'tool') {
+          // 2. Tool Output (Result from the tool)
+          // We immediately add this as a message
+          else if (eventType === 'tool') {
             setMessages((prev) => [
               ...prev,
               {
@@ -131,17 +137,11 @@ export default function Chat() {
             streamingContentRef.current = '';
           }
 
-          // 3. Handle specific AI Text Content
-          // Note: Standard content updates go to streamingContent to show typing effect
-          else if (chunk.type === 'ai' && chunk.content) {
-            // handle string content for streaming display
+          // 3. AI Answer (Content streaming)
+          else if (eventType === 'ai' && chunk.content) {
             if (typeof chunk.content === 'string') {
-              streamingContentRef.current = chunk.content;
-              setStreamingContent(chunk.content);
-            } else {
-              // If content is complex structure during streaming (unlikely for chunks but possible final payload)
-              // We might want to just let the full refresh handle it or stringify it
-              // For now assuming streaming chunks are text parts
+              streamingContentRef.current += chunk.content;
+              setStreamingContent((prev) => prev + chunk.content);
             }
           }
         },
@@ -222,15 +222,21 @@ export default function Chat() {
                     className={`max-w-[80%] rounded-lg px-4 py-2 ${message.type === 'human'
                       ? 'bg-primary-600 text-white'
                       : message.type === 'tool'
-                        ? 'bg-gray-50 border border-gray-200 text-gray-800'
-                        : 'bg-gray-100 text-gray-900'
+                        ? 'bg-amber-50 border border-amber-200 text-gray-800' // Highlighted tool output
+                        : message.type === 'ai' && message.tool_calls && message.tool_calls.length > 0
+                          ? 'bg-blue-50 border border-blue-200 text-gray-800' // Highlighted tool call
+                          : 'bg-gray-100 text-gray-900'
                       }`}
                   >
                     {/* Render Content */}
                     {message.type === 'tool' ? (
                       <div className="text-sm font-mono">
-                        <div className="font-bold text-xs text-gray-500 mb-1">Tool Output ({message.name})</div>
-                        <div className="whitespace-pre-wrap break-words">{typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}</div>
+                        <div className="font-bold text-xs text-amber-600 mb-1 flex items-center gap-1">
+                          <span>📦</span> Tool Output ({message.name})
+                        </div>
+                        <div className="whitespace-pre-wrap break-words max-h-60 overflow-y-auto custom-scrollbar">
+                          {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
+                        </div>
                       </div>
                     ) : (
                       <div className="whitespace-pre-wrap break-words">
@@ -242,9 +248,11 @@ export default function Chat() {
                               }
                               if (block.type === 'tool_use') {
                                 return (
-                                  <div key={index} className="text-xs bg-white/50 p-2 rounded border border-gray-200">
-                                    <div className="font-semibold text-gray-600">🛠️ Calling: <span className="text-gray-900 font-bold">{block.name}</span></div>
-                                    <div className="font-mono text-gray-500 mt-1 whitespace-pre-wrap">
+                                  <div key={index} className="text-xs bg-white/80 p-2 rounded border border-blue-100">
+                                    <div className="font-semibold text-blue-600 flex items-center gap-1">
+                                      <span>🛠️</span> Calling:  <span className="font-bold">{block.name}</span>
+                                    </div>
+                                    <div className="font-mono text-gray-600 mt-1 whitespace-pre-wrap">
                                       {JSON.stringify(block.input, null, 2)}
                                     </div>
                                   </div>
@@ -259,13 +267,15 @@ export default function Chat() {
                       </div>
                     )}
 
-                    {/* Render Tool Calls for AI messages */}
+                    {/* Render Tool Calls for AI messages (Standard / Legacy) */}
                     {message.type === 'ai' && message.tool_calls && message.tool_calls.length > 0 && (
                       <div className="mt-2 space-y-2">
                         {message.tool_calls.map((toolCall) => (
-                          <div key={toolCall.id} className="text-xs bg-white/50 p-2 rounded border border-gray-200">
-                            <div className="font-semibold text-gray-600">🛠️ Calling: {toolCall.name}</div>
-                            <div className="font-mono text-gray-500 mt-1 whitespace-pre-wrap">
+                          <div key={toolCall.id} className="text-xs bg-white/80 p-2 rounded border border-blue-100">
+                            <div className="font-semibold text-blue-600 flex items-center gap-1">
+                              <span>🛠️</span> Calling: {toolCall.name}
+                            </div>
+                            <div className="font-mono text-gray-600 mt-1 whitespace-pre-wrap">
                               {JSON.stringify(toolCall.args, null, 2)}
                             </div>
                           </div>
@@ -284,14 +294,20 @@ export default function Chat() {
               ))}
 
               {/* Streaming message - show during streaming or until messages are refreshed */}
-              {streamingContent && (
+              {/* Streaming message - show during streaming or until messages are refreshed */}
+              {(streamingContent || isStreaming) && (
                 <div className="flex justify-start">
                   <div className="max-w-[80%] rounded-lg px-4 py-2 bg-gray-100 text-gray-900">
-                    <div className="whitespace-pre-wrap break-words">{streamingContent}</div>
+                    {streamingContent && (
+                      <div className="whitespace-pre-wrap break-words mb-1">{streamingContent}</div>
+                    )}
                     {isStreaming && (
-                      <div className="text-xs mt-1 text-gray-500">
-                        <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
-                        {' Typing...'}
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                        <svg className="animate-spin h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Generating...</span>
                       </div>
                     )}
                   </div>

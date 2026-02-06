@@ -141,7 +141,7 @@ export default function KBLibrary() {
             <div key={kb.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900">{kb.name}</h3>
               {kb.description && (
-                <p className="mt-2 text-sm text-gray-600">{kb.description}</p>
+                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{kb.description}</p>
               )}
               <div className="mt-4 flex gap-2">
                 <Button size="sm" variant="secondary" onClick={() => handleViewKB(kb.id)}>
@@ -175,8 +175,8 @@ export default function KBLibrary() {
           viewingKB
             ? 'Knowledge Base Details'
             : editingKB
-            ? 'Edit Knowledge Base'
-            : 'Create Knowledge Base'
+              ? 'Edit Knowledge Base'
+              : 'Create Knowledge Base'
         }
         footer={
           viewingKB ? (

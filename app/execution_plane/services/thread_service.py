@@ -73,6 +73,7 @@ class ThreadService:
                         if payload:
                             print(f"Payload: {payload}")
                             yield f"data: {json.dumps(payload)}\n\n"
+                            await asyncio.sleep(0.01)
 
                         # Salviamo riferimento per DB
                         if last_msg.type == "ai" and not last_msg.tool_calls:

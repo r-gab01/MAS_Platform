@@ -123,7 +123,7 @@ export default function AgentsLibrary() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Debug: log all form data
     console.log('=== Form Validation Debug ===');
     console.log('Form Data:', formData);
@@ -135,7 +135,7 @@ export default function AgentsLibrary() {
     console.log('prompt_id:', formData.prompt_id);
     console.log('tool_ids:', formData.tool_ids);
     console.log('kb_ids:', formData.kb_ids);
-    
+
     // Check each field individually
     const errors: string[] = [];
     if (!formData.name || formData.name.trim() === '') {
@@ -147,7 +147,7 @@ export default function AgentsLibrary() {
     if (!formData.llm_model_id || formData.llm_model_id <= 0) {
       errors.push(`LLM Model is required (current value: ${formData.llm_model_id})`);
     }
-    
+
     if (errors.length > 0) {
       console.error('Validation errors:', errors);
       alert(`Please fill in all required fields:\n${errors.join('\n')}`);
@@ -201,7 +201,7 @@ export default function AgentsLibrary() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
-                  <p className="mt-1 text-sm text-gray-600">{agent.description}</p>
+                  <p className="mt-1 text-sm text-gray-600 line-clamp-2">{agent.description}</p>
                   <div className="mt-2 flex gap-2">
                     <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800">
                       {agent.agent_type}
@@ -238,8 +238,8 @@ export default function AgentsLibrary() {
           viewingAgent
             ? 'Agent Details'
             : editingAgent
-            ? 'Edit Agent'
-            : 'Create Agent'
+              ? 'Edit Agent'
+              : 'Create Agent'
         }
         footer={
           viewingAgent ? (
@@ -308,11 +308,11 @@ export default function AgentsLibrary() {
               onChange={(e) => {
                 const selectedValue = e.target.value;
                 console.log('LLM Model onChange - raw value:', selectedValue, '| type:', typeof selectedValue);
-                
+
                 if (selectedValue && selectedValue !== '') {
                   const parsedValue = parseInt(selectedValue, 10);
                   console.log('LLM Model onChange - parsed value:', parsedValue, '| isNaN:', isNaN(parsedValue));
-                  
+
                   if (!isNaN(parsedValue) && parsedValue > 0) {
                     console.log('LLM Model onChange - updating formData with:', parsedValue);
                     setFormData((prev) => {

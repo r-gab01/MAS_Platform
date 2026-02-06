@@ -49,7 +49,7 @@ export const useSendMessage = () => {
     }: {
       threadId: string;
       request: ChatRequest;
-      onChunk?: (message: Partial<ChatMessageRead>) => void;
+      onChunk?: (data: any) => void;
     }) => {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       const response = await fetch(`${API_BASE_URL}/api/v1/execution/threads/${threadId}/chat`, {
@@ -88,13 +88,17 @@ export const useSendMessage = () => {
                 const jsonStr = line.slice(6); // Remove "data: " prefix
                 const data = JSON.parse(jsonStr);
 
-                // Extract content from AI messages
-                if (data.type === 'ai' && data.content) {
-                  fullContent = data.content;
-                  if (onChunk) {
-                    onChunk(data.content, data.type);
-                  }
+                if (onChunk) {
+                  onChunk(data);
                 }
+
+                // Keep tracking full content for return value if applicable
+                if (data.type === 'answer' && data.content) {
+                  fullContent += data.content;
+                } else if (data.type === 'ai' && data.content) {
+                  fullContent = data.content; // Legacy behavior or if not streaming delta
+                }
+
               } catch (e) {
                 console.error('Error parsing SSE data:', e, line);
               }
