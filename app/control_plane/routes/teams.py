@@ -49,7 +49,7 @@ def read_team(team_id: int,
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.put("/team_id}", response_model=TeamRead)
+@router.put("/{team_id}", response_model=TeamRead)
 def update_team(team_data: TeamCreate,
                  team_id: int,
                  db: Session = Depends(get_db)
