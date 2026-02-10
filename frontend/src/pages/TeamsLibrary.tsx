@@ -28,6 +28,7 @@ export default function TeamsLibrary() {
     supervisor_id: 0,
     worker_ids: [],
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: viewingTeam } = useTeam(viewingTeamId || 0);
 
@@ -136,30 +137,47 @@ export default function TeamsLibrary() {
     <div>
       <Header title="Teams Library" subtitle="Manage your agent teams" />
       <div className="p-6">
-        <div className="mb-4 flex justify-end">
-          <Button onClick={() => handleOpenModal()}>Create Team</Button>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:relative sm:justify-start sm:min-h-[40px]">
+          <div className="w-full sm:max-w-xs sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            <Input
+              placeholder="Search teams..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-auto sm:ml-auto">
+            <Button onClick={() => handleOpenModal()}>Create Team</Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {teams?.map((team) => (
-            <div key={team.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
-              {team.description && (
-                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{team.description}</p>
-              )}
-              <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => handleOpenViewModal(team.id)}>
-                  View
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => handleOpenModal(team.id)}>
-                  Edit
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => handleDelete(team.id)}>
-                  Delete
-                </Button>
+          {teams
+            ?.filter((team) => {
+              const query = searchQuery.toLowerCase();
+              return (
+                team.name.toLowerCase().includes(query) ||
+                (team.description && team.description.toLowerCase().includes(query))
+              );
+            })
+            .map((team) => (
+              <div key={team.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
+                {team.description && (
+                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">{team.description}</p>
+                )}
+                <div className="mt-4 flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => handleOpenViewModal(team.id)}>
+                    View
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => handleOpenModal(team.id)}>
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="danger" onClick={() => handleDelete(team.id)}>
+                    Delete
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {teams?.length === 0 && (

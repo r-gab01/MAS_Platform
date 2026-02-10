@@ -17,7 +17,8 @@ class LLMFactory:
             provider: str,
             model_name: str,
             temperature: float = 0.0,
-            max_tokens: int = None
+            max_tokens: int = None,
+            callbacks: list = None
     ) -> BaseChatModel:
         """
         Factory che restituisce l'istanza LangChain corretta in base al provider.
@@ -27,6 +28,7 @@ class LLMFactory:
             model_name: Il nome del deployment (Azure) o model ID (AWS/OpenAI)
             temperature: Creatività del modello
             max_tokens: numero di tokens massimo di output del modello
+            callbacks: lista di callback da passare al modello
         """
 
         # --- CASO 1: AZURE OPENAI ---
@@ -41,7 +43,8 @@ class LLMFactory:
                 azure_endpoint=creds["endpoint"],
                 api_key=creds["api_key"],
                 temperature=temperature,
-                max_tokens=max_tokens
+                max_tokens=max_tokens,
+                callbacks=callbacks
             )
 
         # --- CASO 2: AWS BEDROCK CONVERSE (AMAZON MODELS)
@@ -55,7 +58,9 @@ class LLMFactory:
                 aws_access_key_id=creds["aws_access_key_id"],
                 aws_secret_access_key=creds["aws_secret_access_key"],
                 #model_kwargs={"temperature": temperature}  # Bedrock passa i param così
-                temperature=temperature
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=callbacks
             )
 
         # --- CASO 2: AWS BEDROCK (Claude, Llama, Titan) ---
@@ -79,7 +84,8 @@ class LLMFactory:
                         'max_attempts': 3,
                         'mode': 'standard'
                     }
-                )
+                ),
+                callbacks=callbacks
             )
 
         else:

@@ -167,6 +167,8 @@ export interface ToolUseBlock {
 
 export type ContentBlock = TextBlock | ToolUseBlock;
 
+
+
 export interface ChatMessageRead {
   id: string; // UUID
   type: MessageType;
@@ -175,6 +177,7 @@ export interface ChatMessageRead {
   tool_calls?: ToolCall[];
   tool_call_id?: string;
   name?: string;
+
 }
 
 export interface ChatRequest {

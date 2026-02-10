@@ -50,10 +50,17 @@ class ThreadService:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
             return
 
-        # 2. SETUP GRAFO
+        # 2. SETUP GRAFO e TRACKER
+        from app.shared.utils.token_tracker import TokenUsageTracker
+        usage_tracker = TokenUsageTracker()
+
         async with CheckpointFactory.get_checkpointer() as checkpointer:
             try:
-                graph = await asyncio.to_thread(GraphFactory.build_team_graph, db, team_id, checkpointer)
+                graph = await asyncio.to_thread(
+                    GraphFactory.build_team_graph,
+                    db, team_id, checkpointer,
+                    callbacks=[usage_tracker]
+                )
             except Exception as e:
                 yield f"data: Error: {str(e)}\n\n"
                 return
@@ -79,6 +86,16 @@ class ThreadService:
                         if last_msg.type == "ai" and not last_msg.tool_calls:
                             final_message = last_msg
 
+                # 4. STREAMING UTILIZZO TOKEN
+                if usage_tracker.total_tokens > 0:
+                    usage_payload = {
+                        "type": "usage",
+                        "total_tokens": usage_tracker.total_tokens,
+                        "prompt_tokens": usage_tracker.prompt_tokens,
+                        "completion_tokens": usage_tracker.completion_tokens
+                    }
+                    yield f"data: {json.dumps(usage_payload)}\n\n"
+
             except asyncio.CancelledError:
                 # Opzionale: Loggare che l'utente ha chiuso la connessione
                 print(f"--- Utente disconnesso dal thread {thread_id} ---")
@@ -88,7 +105,7 @@ class ThreadService:
             except Exception as e:
                 yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-            # 4. SALVATAGGIO MESSAGGIO FINALE (sincrono)
+            # 5. SALVATAGGIO MESSAGGIO FINALE (sincrono)
             finally:
                 if final_message:
                     await asyncio.to_thread(ThreadService._save_ai_message_sync, db, thread_id, final_message)

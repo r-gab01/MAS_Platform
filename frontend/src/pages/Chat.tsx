@@ -24,13 +24,18 @@ export default function Chat() {
   const chatAreaRef = useRef<HTMLDivElement>(null);
   const streamingContentRef = useRef<string>('');
 
+
   // Load existing messages when threadId changes, but don't overwrite optimistic updates while streaming
   useEffect(() => {
     // Skip updates if streaming is active to preserve optimistic state
     if (isStreaming) return;
 
     if (existingMessages) {
-      setMessages(existingMessages);
+      let currentMessages = [...existingMessages];
+
+
+
+      setMessages(currentMessages);
       // Clear streaming content when messages are refreshed
       setStreamingContent('');
       streamingContentRef.current = '';
@@ -89,6 +94,7 @@ export default function Chat() {
     setStreamingContent('');
     streamingContentRef.current = '';
 
+
     try {
       await sendMessage.mutateAsync({
         threadId: currentThreadId,
@@ -98,6 +104,8 @@ export default function Chat() {
         },
         onChunk: (chunk: any) => {
           const eventType = chunk.type;
+
+
 
           // 1. Tool Calls (AI requests execution of a tool)
           // We immediately add this as a message
@@ -283,6 +291,8 @@ export default function Chat() {
                       </div>
                     )}
 
+
+
                     <div
                       className={`text-xs mt-1 ${message.type === 'human' ? 'text-primary-100' : 'text-gray-500'
                         }`}
@@ -293,7 +303,6 @@ export default function Chat() {
                 </div>
               ))}
 
-              {/* Streaming message - show during streaming or until messages are refreshed */}
               {/* Streaming message - show during streaming or until messages are refreshed */}
               {(streamingContent || isStreaming) && (
                 <div className="flex justify-start">

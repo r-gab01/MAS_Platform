@@ -24,6 +24,7 @@ export default function KBLibrary() {
     name: '',
     description: '',
   });
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleOpenModal = (kbId?: string) => {
@@ -132,33 +133,50 @@ export default function KBLibrary() {
     <div>
       <Header title="Knowledge Bases Library" subtitle="Manage your knowledge bases and documents" />
       <div className="p-6">
-        <div className="mb-4 flex justify-end">
-          <Button onClick={() => handleOpenModal()}>Create Knowledge Base</Button>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:relative sm:justify-start sm:min-h-[40px]">
+          <div className="w-full sm:max-w-xs sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            <Input
+              placeholder="Search knowledge bases..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-auto sm:ml-auto">
+            <Button onClick={() => handleOpenModal()}>Create Knowledge Base</Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {knowledgeBases?.map((kb) => (
-            <div key={kb.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">{kb.name}</h3>
-              {kb.description && (
-                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{kb.description}</p>
-              )}
-              <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => handleViewKB(kb.id)}>
-                  View
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => handleOpenModal(kb.id)}>
-                  Edit
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => handleOpenUploadModal(kb.id)}>
-                  Upload
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => handleDelete(kb.id)}>
-                  Delete
-                </Button>
+          {knowledgeBases
+            ?.filter((kb) => {
+              const query = searchQuery.toLowerCase();
+              return (
+                kb.name.toLowerCase().includes(query) ||
+                (kb.description && kb.description.toLowerCase().includes(query))
+              );
+            })
+            .map((kb) => (
+              <div key={kb.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900">{kb.name}</h3>
+                {kb.description && (
+                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">{kb.description}</p>
+                )}
+                <div className="mt-4 flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => handleViewKB(kb.id)}>
+                    View
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => handleOpenModal(kb.id)}>
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => handleOpenUploadModal(kb.id)}>
+                    Upload
+                  </Button>
+                  <Button size="sm" variant="danger" onClick={() => handleDelete(kb.id)}>
+                    Delete
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {knowledgeBases?.length === 0 && (

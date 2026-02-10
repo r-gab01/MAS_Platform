@@ -15,7 +15,7 @@ from langchain.agents.middleware import SummarizationMiddleware
 class GraphFactory:
 
     @staticmethod
-    def _create_worker_as_tool(worker: AgentModel):
+    def _create_worker_as_tool(worker: AgentModel, callbacks: list = None):
         """
         Crea un tool che, quando chiamato, invoca l'agente worker.
         """
@@ -24,7 +24,8 @@ class GraphFactory:
             provider=worker.llm_model.provider,
             model_name=worker.llm_model.api_model_name,
             temperature=worker.temperature,
-            max_tokens=None
+            max_tokens=None,
+            callbacks=callbacks
         )
 
         worker_tools = []
@@ -64,7 +65,7 @@ class GraphFactory:
 
 
     @staticmethod
-    def build_team_graph(db: Session, team_id: int, checkpointer=None):
+    def build_team_graph(db: Session, team_id: int, checkpointer=None, callbacks: list = None):
         """
         Costruisce il grafo del team caricando i dati dal DB al volo.
         """
@@ -77,7 +78,7 @@ class GraphFactory:
         # 2. Costruisco ogni worker come tool per il supervisor
         tools = []
         for worker in team.workers:
-            worker_tool = GraphFactory._create_worker_as_tool(worker)
+            worker_tool = GraphFactory._create_worker_as_tool(worker, callbacks=callbacks)
             tools.append(worker_tool)
 
         # 3. Crea il modello LLM del Supervisor
@@ -85,7 +86,8 @@ class GraphFactory:
             provider=team.supervisor.llm_model.provider,
             model_name=team.supervisor.llm_model.api_model_name,
             temperature=team.supervisor.temperature,
-            max_tokens=None
+            max_tokens=None,
+            callbacks=callbacks
         )
 
         # 4. Aggiungo Basi di conoscenza al supervisor
@@ -104,9 +106,15 @@ class GraphFactory:
             tools=tools,
             middleware=[
                 SummarizationMiddleware(
-                    model= LLMFactory.get_llm_model(provider="aws-converse", model_name="eu.amazon.nova-micro-v1:0"),
-            #        max_tokens_before_summary=4000,
-                    messages_to_keep=3
+                    model= LLMFactory.get_llm_model(
+                        provider="aws-converse", 
+                        model_name="eu.amazon.nova-micro-v1:0",
+                        max_tokens=4096
+                    ),
+                    #trigger=("messages", 4),
+                    trigger=("fraction", 0.7),  # Si attiva al 70% del contesto
+                    keep=("fraction", 0.3)  # Mantiene il 30% dei messaggi recenti
+                    #keep=("messages", 4)
                 )
             ],
             checkpointer=checkpointer # memoria della chat!

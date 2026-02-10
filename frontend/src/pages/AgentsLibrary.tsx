@@ -37,6 +37,7 @@ export default function AgentsLibrary() {
     tool_ids: [],
     kb_ids: [],
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleOpenModal = async (agentId?: number) => {
     if (agentId) {
@@ -187,42 +188,107 @@ export default function AgentsLibrary() {
     );
   }
 
+  const filteredAgents = agents?.filter((agent) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      agent.name.toLowerCase().includes(query) ||
+      agent.description.toLowerCase().includes(query)
+    );
+  }) || [];
+
+  const supervisors = filteredAgents.filter((a) => a.agent_type === 'supervisor');
+  const workers = filteredAgents.filter((a) => a.agent_type === 'worker');
+
   return (
     <div>
       <Header title="Agents Library" subtitle="Manage your AI agents" />
       <div className="p-6">
-        <div className="mb-4 flex justify-end">
-          <Button onClick={() => handleOpenModal()}>Create Agent</Button>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:relative sm:justify-start sm:min-h-[40px]">
+          <div className="w-full sm:max-w-xs sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            <Input
+              placeholder="Search agents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-auto sm:ml-auto">
+            <Button onClick={() => handleOpenModal()}>Create Agent</Button>
+          </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {agents?.map((agent) => (
-            <div key={agent.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
-                  <p className="mt-1 text-sm text-gray-600 line-clamp-2">{agent.description}</p>
-                  <div className="mt-2 flex gap-2">
-                    <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800">
-                      {agent.agent_type}
-                    </span>
+        {/* Supervisors Section */}
+        {supervisors.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              Supervisors
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {supervisors.map((agent) => (
+                <div key={agent.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
+                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">{agent.description}</p>
+                      <div className="mt-2 flex gap-2">
+                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                          {agent.agent_type}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => handleViewAgent(agent.id)}>
+                      View
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => handleOpenModal(agent.id)}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(agent.id)}>
+                      Delete
+                    </Button>
                   </div>
                 </div>
-              </div>
-              <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => handleViewAgent(agent.id)}>
-                  View
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => handleOpenModal(agent.id)}>
-                  Edit
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => handleDelete(agent.id)}>
-                  Delete
-                </Button>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Worker Agents Section */}
+        {workers.length > 0 && (
+          <div>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              Worker Agents
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {workers.map((agent) => (
+                <div key={agent.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
+                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">{agent.description}</p>
+                      <div className="mt-2 flex gap-2">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                          {agent.agent_type}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => handleViewAgent(agent.id)}>
+                      View
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => handleOpenModal(agent.id)}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(agent.id)}>
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {agents?.length === 0 && (
           <div className="text-center py-12 text-gray-500">

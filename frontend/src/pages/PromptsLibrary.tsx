@@ -20,6 +20,7 @@ export default function PromptsLibrary() {
     description: '',
     system_prompt: '',
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleOpenModal = (promptId?: number) => {
     if (promptId) {
@@ -97,33 +98,51 @@ export default function PromptsLibrary() {
     <div>
       <Header title="Prompts Library" subtitle="Manage your system prompts" />
       <div className="p-6">
-        <div className="mb-4 flex justify-end">
-          <Button onClick={() => handleOpenModal()}>Create Prompt</Button>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:relative sm:justify-start sm:min-h-[40px]">
+          <div className="w-full sm:max-w-xs sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            <Input
+              placeholder="Search prompts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-auto sm:ml-auto">
+            <Button onClick={() => handleOpenModal()}>Create Prompt</Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {prompts?.map((prompt) => (
-            <div key={prompt.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900">{prompt.name}</h3>
-              {prompt.description && (
-                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{prompt.description}</p>
-              )}
-              <div className="mt-3">
-                <p className="text-xs text-gray-500 line-clamp-3">
-                  {prompt.system_prompt.substring(0, 150)}
-                  {prompt.system_prompt.length > 150 ? '...' : ''}
-                </p>
+          {prompts
+            ?.filter((prompt) => {
+              const query = searchQuery.toLowerCase();
+              return (
+                prompt.name.toLowerCase().includes(query) ||
+                (prompt.description && prompt.description.toLowerCase().includes(query)) ||
+                prompt.system_prompt.toLowerCase().includes(query)
+              );
+            })
+            .map((prompt) => (
+              <div key={prompt.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900">{prompt.name}</h3>
+                {prompt.description && (
+                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">{prompt.description}</p>
+                )}
+                <div className="mt-3">
+                  <p className="text-xs text-gray-500 line-clamp-3">
+                    {prompt.system_prompt.substring(0, 150)}
+                    {prompt.system_prompt.length > 150 ? '...' : ''}
+                  </p>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => handleOpenModal(prompt.id)}>
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="danger" onClick={() => handleDelete(prompt.id)}>
+                    Delete
+                  </Button>
+                </div>
               </div>
-              <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => handleOpenModal(prompt.id)}>
-                  Edit
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => handleDelete(prompt.id)}>
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {prompts?.length === 0 && (
