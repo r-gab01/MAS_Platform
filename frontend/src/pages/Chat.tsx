@@ -7,6 +7,11 @@ import Textarea from '../components/common/Textarea';
 import Button from '../components/common/Button';
 import Header from '../components/Layout/Header';
 import type { ChatMessageRead } from '../types/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+
+const markdownStyles = "prose prose-sm md:prose-base max-w-none dark:prose-invert prose-p:leading-relaxed prose-p:my-1.5 prose-headings:my-3 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-ul:my-2 prose-ol:my-2 prose-li:my-1";
 
 export default function Chat() {
   const { threadId } = useParams<{ threadId?: string }>();
@@ -227,7 +232,7 @@ export default function Chat() {
                     }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg px-4 py-2 ${message.type === 'human'
+                    className={`${message.type === 'human' ? 'max-w-[80%]' : 'max-w-[70%]'} rounded-lg px-4 py-2 ${message.type === 'human'
                       ? 'bg-primary-600 text-white'
                       : message.type === 'tool'
                         ? 'bg-amber-50 border border-amber-200 text-gray-800' // Highlighted tool output
@@ -246,13 +251,32 @@ export default function Chat() {
                           {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
                         </div>
                       </div>
+                    ) : message.type === 'human' ? (
+                      <div className="whitespace-pre-wrap break-words text-white">
+                        {typeof message.content === 'string' 
+                          ? message.content 
+                          : Array.isArray(message.content) 
+                            ? message.content.map((b: any) => b.type === 'text' ? b.text : '').join('\n') 
+                            : JSON.stringify(message.content)}
+                      </div>
                     ) : (
-                      <div className="whitespace-pre-wrap break-words">
+                      <div className="w-full break-words">
                         {Array.isArray(message.content) ? (
                           <div className="space-y-3">
-                            {message.content.map((block, index) => {
+                            {message.content.map((block: any, index: number) => {
                               if (block.type === 'text') {
-                                return <div key={index}>{block.text}</div>;
+                                const isIntermediate = message.tool_calls && message.tool_calls.length > 0;
+                                return isIntermediate ? (
+                                  <div key={index} className="whitespace-pre-wrap text-gray-700 text-sm">
+                                    {block.text}
+                                  </div>
+                                ) : (
+                                  <div key={index} className={markdownStyles}>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                                      {block.text}
+                                    </ReactMarkdown>
+                                  </div>
+                                );
                               }
                               if (block.type === 'tool_use') {
                                 return (
@@ -269,8 +293,16 @@ export default function Chat() {
                               return null;
                             })}
                           </div>
+                        ) : message.tool_calls && message.tool_calls.length > 0 ? (
+                          <div className="whitespace-pre-wrap text-gray-700 text-sm">
+                            {typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}
+                          </div>
                         ) : (
-                          message.content
+                          <div className={markdownStyles}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                              {typeof message.content === 'string' ? message.content : ''}
+                            </ReactMarkdown>
+                          </div>
                         )}
                       </div>
                     )}
@@ -278,7 +310,7 @@ export default function Chat() {
                     {/* Render Tool Calls for AI messages (Standard / Legacy) */}
                     {message.type === 'ai' && message.tool_calls && message.tool_calls.length > 0 && (
                       <div className="mt-2 space-y-2">
-                        {message.tool_calls.map((toolCall) => (
+                        {message.tool_calls.map((toolCall: any) => (
                           <div key={toolCall.id} className="text-xs bg-white/80 p-2 rounded border border-blue-100">
                             <div className="font-semibold text-blue-600 flex items-center gap-1">
                               <span>🛠️</span> Calling: {toolCall.name}
@@ -306,9 +338,13 @@ export default function Chat() {
               {/* Streaming message - show during streaming or until messages are refreshed */}
               {(streamingContent || isStreaming) && (
                 <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-lg px-4 py-2 bg-gray-100 text-gray-900">
+                  <div className="max-w-[70%] rounded-lg px-4 py-2 bg-gray-100 text-gray-900">
                     {streamingContent && (
-                      <div className="whitespace-pre-wrap break-words mb-1">{streamingContent}</div>
+                      <div className={`${markdownStyles} mb-1`}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                          {streamingContent}
+                        </ReactMarkdown>
+                      </div>
                     )}
                     {isStreaming && (
                       <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
