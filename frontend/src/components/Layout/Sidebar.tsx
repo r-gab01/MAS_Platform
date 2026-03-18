@@ -35,7 +35,9 @@ export default function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-gray-900 text-white">
       <div className="flex h-16 items-center justify-center border-b border-gray-800">
-        <h1 className="text-xl font-bold">AI RAG Platform</h1>
+        <Link to="/" className="text-xl font-bold hover:text-gray-300 transition-colors">
+          MAS Platform
+        </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 py-4">
