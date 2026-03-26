@@ -1,6 +1,7 @@
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import AzureChatOpenAI
 from langchain_aws import ChatBedrock, ChatBedrockConverse
+from langchain_ollama import ChatOllama
 from app.shared.security.credential_manager import credential_manager
 
 from botocore.config import Config
@@ -63,7 +64,7 @@ class LLMFactory:
                 callbacks=callbacks
             )
 
-        # --- CASO 2: AWS BEDROCK (Claude, Llama, Titan) ---
+        # --- CASO 3: AWS BEDROCK (Claude, Llama, Titan) ---
         elif provider.lower() == "aws":
             creds = credential_manager.get_aws_credentials()
 
@@ -87,6 +88,19 @@ class LLMFactory:
                 ),
                 callbacks=callbacks
             )
+
+        # --- CASO 3: OLLAMA (loal)
+        elif provider.lower() == "local":
+            creds = credential_manager.get_ollama_credentials()
+            if not creds["ollama_base_url"]:
+                raise ValueError("local API Key mancante")
+
+            return ChatOllama(
+                model=model_name,
+                temperature=temperature,
+                base_url=creds.get("ollama_base_url")
+            )
+
 
         else:
             raise ValueError(f"Provider '{provider}' non supportato.")

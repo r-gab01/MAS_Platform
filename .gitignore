@@ -8,3 +8,4 @@ __pycache__/
 .http
 frontend/node_modules
 mockup
+uploaded_data

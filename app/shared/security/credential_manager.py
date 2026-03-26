@@ -31,6 +31,12 @@ class CredentialManager:
             "embedding_model_id": os.getenv("AWS_EMBEDDING_MODEL_ID")
         }
 
+    def get_ollama_credentials(self) -> Dict[str, str]:
+
+        return {
+            "ollama_base_url": os.getenv("OLLAMA_BASE_URL")
+        }
+
     def get_huggingface_credentials(self) -> Dict[str, str]:
         """
         Recupera credenziali per HuggingFace Locale.
