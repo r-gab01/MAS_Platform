@@ -30,7 +30,7 @@ Once an agent or a team is configured, users can collaborate with them through a
 The true power of the MAS Platform lies in group orchestration. Users can connect multiple specialized agents—each with specific roles and tools—into a unified **Team**. The platform coordinates the dialogue between these agents, allowing them to collaborate, debate, and solve complex tasks automatically before presenting the final result to the user.
 
 <img src="images/TeamOfAgents.png" width="400" alt="Dashboard" />
-*A visual representation of multiple agents collaborating within a team setup to tackle a multi-step objective.*
+*Visual representation of multiple agents able to collaborate within a team led by the Supervisor agent.*
 
 ## Prerequisites
 - [Docker](https://www.docker.com/) and Docker Compose
