@@ -1,52 +1,44 @@
 # MAS Platform (tesi-AOPaaS)
 
-Progetto di Tesi di Gabriele Richiusa su un servizio di Orchestrazione Agentica low code basato su cloud.
+Thesis Project by Gabriele Richiusa on a cloud-based low-code Agent Orchestration service.
 
-## Prerequisiti
-- [Docker](https://www.docker.com/) e Docker Compose
-- [Node.js](https://nodejs.org/) (versione 18 o raccomandata) e npm
-- (Opzionale) Python 3.12+ se si desidera eseguire il backend fuori da Docker
+## Prerequisites
+- [Docker](https://www.docker.com/) and Docker Compose
+- [Node.js](https://nodejs.org/) (version 18 or higher recommended) and npm
+- (Optional) Python 3.12+ if you wish to run the backend outside of Docker
 
-## Guida all'avvio rapido
+## Quick Start Guide
 
-### 1. Clonare/Scaricare il repository
-Dopo aver fatto il clone (o una fetch) del repository da GitHub, entra nella directory del progetto:
+### 1. Clone/Download the repository
+After cloning (or fetching) the repository from GitHub, navigate to the project directory:
 ```bash
 git clone https://github.com/r-gab01/MAS_Platform.git
 cd MAS_Platform
 ```
 
-### 2. Configurazione Backend e Variabili d'Ambiente 
-Il backend richiede un file `.env` per connettersi ai vari provider (Azure, AWS, base dati locale, Ollama, ecc.).
+### 2. Backend Configuration and Environment Variables
+The backend requires an `.env` file to connect to various providers (Azure, AWS, local database, Ollama, etc.).
 
-1. Copia il file d'esempio:
+1. Copy the example environment file:
    ```bash
-   # Dalla root del progetto spostati nella cartella app e copia l'environment
+   # From the project root, navigate to the app folder and copy the environment file
    cd app
    cp example.env .env
-   # o su windows: copy example.env .env
+   # or on Windows: copy example.env .env
    ```
-2. Apri il file `app/.env` appena creato e compila le credenziali necessarie (es. API key per i vari LLM, chiavi di Tavily). Se vuoi testare un LLM in locale via Ollama, ricorda di settare `OLLAMA_BASE_URL=http://host.docker.internal:11434` così che il container Docker possa raggiungere l'host. 
-3. Torna alla root del progetto:
+2. Open the newly created `app/.env` file and fill in the necessary credentials (e.g., API keys for various LLMs, Tavily keys). If you want to test a local LLM via Ollama, remember to set `OLLAMA_BASE_URL=http://host.docker.internal:11434` so that the Docker container can reach the host machine.
+3. Return to the project root:
    ```bash
    cd ..
    ```
 
-### 3. Avvio del Backend e del Database tramite Docker
-Esegui il docker-compose dalla **root** del progetto per formare l'infrastruttura base (il database PostgreSQL con estensione `pgvector` e l'istanza del Backend API FastAPI):
+### 3. Start the Platform via Docker
+Run docker-compose from the **root** of the project to build and start the entire infrastructure (Database, Backend API, and Frontend web client):
 ```bash
 docker-compose up --build -d
 ```
-- Le **API (Backend)** saranno in ascolto su: `http://localhost:8000`
-- La documentazione (Swagger) sarà su: `http://localhost:8000/docs`
+- The **Frontend Web Client** will be accessible at: `http://localhost:3000`
+- The **APIs (Backend)** will be listening on: `http://localhost:8000`
+- The documentation (Swagger) will be available at: `http://localhost:8000/docs`
 
-*(Se non vuoi utilizzare Docker, puoi installare la venv python, installare `pip install -r app/requirements.txt` e lanciare il file `uvicorn app.main:app --reload`)*
-
-### 4. Avvio del Frontend
-Dalla **root**, apri una nuova finestra o tab del terminale:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Questo scaricherà i pacchetti Node necessari per la UI React/Vite e avvierà il processo di sviluppo locale del client Web su cui visualizzare la MAS Platform.
+*(If you prefer manual setup without Docker, check the specific folders for their traditional python/npm start scripts).*

@@ -14,7 +14,7 @@ services:
       - pgdatabase_volume:/var/lib/postgresql
 
   app:
-    container_name: aop-platform-app
+    container_name: mas-platform-app
     build:
       context: ./app
       dockerfile: Dockerfile
@@ -25,6 +25,23 @@ services:
     env_file:
       - ./app/.env  # Carica le variabili d'ambiente da .env (se esiste)
     restart: unless-stopped
+
+  frontend:
+    container_name: mas-platform-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Evita che le dipendenze vengano sovrascritte dal bind mount locale
+    environment:
+      - VITE_BACKEND_URL=http://app:8000
+      - CHOKIDAR_USEPOLLING=true # Fissa l'hot reload su Windows con volumi docker
+    restart: unless-stopped
+    depends_on:
+      - app
 
 volumes:
   pgdatabase_volume:
