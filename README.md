@@ -1,11 +1,10 @@
 # MAS Platform (tesi-AOPaaS)
 
-Thesis Project by Gabriele Richiusa on a cloud-based low-code Agent Orchestration service.
+Thesis Project by Gabriele Richiusa on a cloud-based Agent Orchestration service with the goal of enabling non-technical users to create and use Multi-Agent Systems with a No-Code approach.
 
 ## Prerequisites
 - [Docker](https://www.docker.com/) and Docker Compose
-- [Node.js](https://nodejs.org/) (version 18 or higher recommended) and npm
-- (Optional) Python 3.12+ if you wish to run the backend outside of Docker
+- (Optional) Python 3.12+ and Node.js 18+ if you wish to run the platform locally without Docker
 
 ## Quick Start Guide
 
